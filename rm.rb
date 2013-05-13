@@ -33,7 +33,8 @@ def do_rm! files = [], options = {}
   files_to_output = []
   files.each do |file|
     abs_file = File.expand_path(file)
-    if File.exists?(abs_file)
+
+    if File.exists?(abs_file) || File.symlink?(abs_file)
       if file.end_with?('/')
         if File.symlink?(abs_file)
           abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
@@ -44,25 +45,30 @@ def do_rm! files = [], options = {}
         end
       end
 
-      if File.directory?(abs_file)
-        if options[:recursion]
-          files_to_delete << abs_file
-          files_to_output.concat Dir[file + '{/**/**,}'].traverse_files_recursively
-        elsif options[:directory]
-          if Dir[abs_file + '/*'].empty?
+      if File.exists?(abs_file) || File.symlink?(abs_file)
+        if File.directory?(abs_file)
+          if options[:recursion]
             files_to_delete << abs_file
-            files_to_output << file
+            files_to_output.concat Dir[file + '{/**/**,}'].traverse_files_recursively
+          elsif options[:directory]
+            if Dir[abs_file + '/*'].empty?
+              files_to_delete << abs_file
+              files_to_output << file
+            else
+              $stderr.puts "rm: #{file}: Directory not empty"
+              $retval = 1
+            end
           else
-            $stderr.puts "rm: #{file}: Directory not empty"
+            $stderr.puts "rm: #{file}: is a directory"
             $retval = 1
           end
         else
-          $stderr.puts "rm: #{file}: is a directory"
-          $retval = 1
+          files_to_delete << abs_file
+          files_to_output << file
         end
       else
-        files_to_delete << abs_file
-        files_to_output << file
+        $stderr.puts "rm: #{file}: No such file or directory"
+        $retval = 1
       end
     else
       $stderr.puts "rm: #{file}: No such file or directory"
@@ -98,14 +104,13 @@ def do_error_handling *args
   begin
     yield(*args)
   rescue
-    $stderr.puts unexpected_error_message
+    $stderr.puts unexpected_error_message("#{$!}\n#{$@.join("\n")}")
   end
 end
 
 def unexpected_error_message output = nil
   """
 Error: #{"Output: #{output.strip}" if output}
-Error Message: #{$! ? "#{$!}\n#{$@.join("\n")}" : 'no exception thrown'}
 Global Variables: #{ PP.pp(global_variables.inject({}) {|h, gb| h[gb] = eval(gb.to_s); h}, '').strip }
 Instance Variables: #{ PP.pp(instance_variables.inject({}) {|h, ib| h[ib] = instance_variable_get(ib.to_s); h}, '').strip }
 It should be a bug, please report this problem to bachue.shu@gmail.com!
