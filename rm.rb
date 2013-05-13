@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'optparse'
+require 'pp'
 
 retval = 0
 
@@ -40,12 +41,16 @@ def do_error_handling(*args)
   rescue
     $stderr.puts "Encounter an error when call AppleScript to delete file `#{file}'"
     $stderr.puts "Output: #{output}"
-    $stderr.puts "#{$!}\n#{$@.join("\n")}"
+    $stderr.puts "Error Message: #{$!}\n#{$@.join("\n")}"
+    $stderr.puts "Global Variables: #{ pp global_variables.inject({}) {|h, gb| h[gb] = eval(gb); h} }"
+    $stderr.puts "Instance Variables: #{ pp instance_variables.inject({}) {|h, ib| h[ib] = instance_variable_get(ib); h} }"
     $stderr.puts "It should be a bug, please report this problem to bachue.shu@gmail.com!"
   end
 end
 
-parse_options!
-do_rm!
+do_error_handling do
+  parse_options!
+  do_rm!
+end
 
 exit retval
