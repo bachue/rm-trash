@@ -28,9 +28,13 @@ def parse_options!
   options
 end
 
-def do_rm! files = [], options = {}
-  files_to_delete = []
-  files_to_output = []
+def options
+  @options ||= parse_options!
+end
+alias :parse_options :options
+
+def do_rm! files = []
+  files_to_rm, deleted_file_list = [], []
   files.each do |file|
     abs_file = File.expand_path(file)
 
@@ -46,25 +50,12 @@ def do_rm! files = [], options = {}
       end
 
       if File.exists?(abs_file) || File.symlink?(abs_file)
-        if File.directory?(abs_file)
-          if options[:recursion]
-            files_to_delete << abs_file
-            files_to_output.concat Dir[file + '{/**/**,}'].traverse_files_recursively
-          elsif options[:directory]
-            if Dir[abs_file + '/*'].empty?
-              files_to_delete << abs_file
-              files_to_output << file
-            else
-              $stderr.puts "rm: #{file}: Directory not empty"
-              $retval = 1
-            end
-          else
-            $stderr.puts "rm: #{file}: is a directory"
-            $retval = 1
-          end
+        if forcely?
+          _files_to_rm, _deleted_file_list = ready_to_rm_forcely(abs_file, file)
+          files_to_rm.concat _files_to_rm
+          deleted_file_list.concat _deleted_file_list
         else
-          files_to_delete << abs_file
-          files_to_output << file
+          do_rm_with_confirmation abs_file, file
         end
       else
         $stderr.puts "rm: #{file}: No such file or directory"
@@ -76,8 +67,37 @@ def do_rm! files = [], options = {}
     end
   end
 
-  rm_all(files_to_delete)
-  files_to_output.each {|file| puts file} if options[:verbose]
+  rm_all(files_to_rm) if forcely?
+  deleted_file_list.each {|file| puts file} if options[:verbose]
+end
+
+def ready_to_rm_forcely abs_file, origin
+  files_to_rm, deleted_file_list = [], []
+  if File.directory?(abs_file)
+    if options[:recursion]
+      files_to_rm << abs_file
+      deleted_file_list.concat Dir[origin + '{/**/**,}'].traverse_files_recursively
+    elsif options[:directory]
+      if Dir[abs_file + '/*'].empty?
+        files_to_rm << abs_file
+        deleted_file_list << origin
+      else
+        $stderr.puts "rm: #{origin}: Directory not empty"
+        $retval = 1
+      end
+    else
+      $stderr.puts "rm: #{origin}: is a directory"
+      $retval = 1
+    end
+  else
+    files_to_rm << abs_file
+    deleted_file_list << origin
+  end
+  [files_to_rm, deleted_file_list]
+end
+
+def do_rm_with_confirmation abs_file, origin
+  raise 'not implemented'
 end
 
 # To call AppleScript to delete a list of file
@@ -100,6 +120,14 @@ def rm_all files
   end
 end
 
+# To call AppleScript to delete a list of file
+# Will confirm 
+# file param must be absolute path
+def rm_with_confirmation files
+  return if files.empty?
+
+end
+
 def do_error_handling *args
   begin
     yield(*args)
@@ -117,6 +145,14 @@ It should be a bug, please report this problem to bachue.shu@gmail.com!
   """
 end
 
+def forcely?
+  !options[:confirmation] || options[:force]
+end
+
+def always_confirm?
+  !forcely?
+end
+
 class Array
   def traverse_files_recursively
     sort { |f1, f2|
@@ -130,8 +166,8 @@ class Array
 end
 
 do_error_handling do
-  options = parse_options!
-  do_rm! ARGV, options
+  parse_options
+  do_rm! ARGV
 end
 
 exit $retval
