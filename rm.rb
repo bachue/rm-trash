@@ -11,31 +11,43 @@ def parse_options!
     opts.on('-v', 'Be verbose when deleting files, showing them as they are removed.') do
       options[:verbose] = true
     end
+    opts.on('-d', 'Attempt to remove directories as well as other types of files.') do
+      options[:directory] = true
+    end
   end.parse!
   options
 end
 
 def do_rm! files = [], options = {}
-  abs_files = []
-  relative_files = []
+  files_to_delete = []
+  files_to_output = []
   files.each do |file|
     abs_file = File.expand_path(file)
     if File.exists?(abs_file)
-      abs_files << abs_file
-      relative_files << file
+      if File.directory?(abs_file)
+        if options[:directory]
+          files_to_delete << abs_file
+          files_to_output.concat Dir[file + '/**/**']
+        else
+          $stderr.puts "rm: #{file}: is a directory"
+        end
+      else
+        files_to_delete << abs_file
+        files_to_output << file
+      end
     else
       $stderr.puts "rm: #{file}: No such file or directory"
       $retval = 1
     end
   end
 
-  rm(abs_files)
-  relative_files.each {|file| puts file} if options[:verbose]
+  rm_all(files_to_delete)
+  files_to_output.each {|file| puts file} if options[:verbose]
 end
 
 # To call AppleScript to delete a list of file
 # file param must be absolute path
-def rm files
+def rm_all files
   return if files.empty?
   do_error_handling do
     _, _, err = Open3.popen3 <<-CMD
