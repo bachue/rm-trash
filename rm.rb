@@ -30,6 +30,7 @@ def do_rm! files = [], options = {}
           files_to_output.concat Dir[file + '/**/**']
         else
           $stderr.puts "rm: #{file}: is a directory"
+          $retval = 1
         end
       else
         files_to_delete << abs_file
@@ -59,7 +60,7 @@ def rm_all files
     CMD
     if error = err.gets
       $retval = 1
-      $stderr.puts error_message(error)
+      $stderr.puts unexpected_error_message(error)
     end
   end
 end
@@ -68,11 +69,11 @@ def do_error_handling *args
   begin
     yield(*args)
   rescue
-    $stderr.puts error_message
+    $stderr.puts unexpected_error_message
   end
 end
 
-def error_message output = nil
+def unexpected_error_message output = nil
   """
 Error: #{"Output: #{output.strip}" if output}
 Error Message: #{$! ? "#{$!}\n#{$@.join("\n")}" : 'no exception thrown'}
