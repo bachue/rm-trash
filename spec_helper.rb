@@ -137,3 +137,11 @@ def create_broken_symbolic_links root = Dir.mktmpdir
     links
   }
 end
+
+def create_ring_symbolic_links root = Dir.mktmpdir
+  @tmpdirs << root
+  @ring_links = (1..5).map {|i| "#{root}/links_#{i}" }
+  @ring_links.each_with_index { |f, i|
+    FileUtils.ln_sf f, @ring_links[i + 1] || @ring_links[0]
+  }
+end

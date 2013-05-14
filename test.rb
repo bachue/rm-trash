@@ -164,6 +164,33 @@ describe 'to delete symbolic links' do
     end
 
     it 'can\' find target file if the path isn\'t end with "/"' do
+      @params = @broken_links.map {|f| f + '/'}
+      stdout, stderr = rm('-v', *@params)
+      stdout.should be_nil
+      @params.each {|f| stderr.should =~ /rm: #{f}: No such file or directory\n/}
+      @broken_links.each {|f| f.should be_existed }
+    end
+  end
+
+  context 'to delete ring symbolic links' do
+    before(:each) do
+      create_ring_symbolic_links
+    end
+
+    it 'can rm a broken symbolic link if the path isn\'t end with "/"' do
+      stdout, stderr = rm('-v', @ring_links.last)
+      stdout.should eql(@ring_links.last + "\n")
+      stderr.should be_nil
+      @ring_links.pop.should_not be_existed
+      @ring_links.each {|f| f.should be_existed }
+    end
+
+    it 'can\' find target file if the path isn\'t end with "/"' do
+      stdout, stderr = rm('-v', @ring_links.first + '/')
+      stdout.should eql(@ring_links.first + "/\n")
+      stderr.should be_nil
+      @ring_links.pop.should_not be_existed
+      @ring_links.each {|f| f.should be_existed }
     end
   end
 end
