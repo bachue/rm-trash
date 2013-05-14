@@ -11,7 +11,7 @@ describe 'test `rm`' do
     stdout, stderr = rm(*@files)
     stdout.should be_nil
     stderr.should be_nil
-    @files.each {|f| f.should_not be_exists}
+    @files.each {|f| f.should_not be_existed }
   end
 
   it 'should skip not existed files' do
@@ -20,7 +20,7 @@ describe 'test `rm`' do
     stdout, stderr = rm(*@all_files)
     stdout.should be_nil
     @not_existed_files.each {|f| stderr.should =~ /rm: #{f}: No such file or directory\n/ }
-    @files.each {|f| f.should_not be_exists}
+    @files.each {|f| f.should_not be_existed }
   end
 
   it 'should add -d if try to rm a directory' do
@@ -29,8 +29,8 @@ describe 'test `rm`' do
     stdout, stderr = rm(*@all_files)
     stdout.should be_nil
     @dirs.each {|f| stderr.should =~ /rm: #{f}: is a directory\n/ }
-    @files.each {|f| f.should_not be_exists}
-    @dirs.each {|f| f.should be_exists}
+    @files.each {|f| f.should_not be_existed }
+    @dirs.each {|f| f.should be_existed }
   end
 end
 
@@ -43,7 +43,7 @@ describe 'test `rm -v`' do
     stdout, stderr = rm('-v', *@files)
     @files.each {|f| stdout.should =~ /#{f}\n/ }
     stderr.should be_nil
-    @files.each {|f| f.should_not be_exists}
+    @files.each {|f| f.should_not be_existed }
   end
 
   it 'should skip not existed files' do
@@ -52,7 +52,7 @@ describe 'test `rm -v`' do
     stdout, stderr = rm('-v', *@all_files)
     @files.each {|f| stdout.should =~ /#{f}\n/ }
     @not_existed_files.each {|f| stderr.should =~ /rm: #{f}: No such file or directory\n/ }
-    @files.each {|f| f.should_not be_exists}
+    @files.each {|f| f.should_not be_existed }
   end
 end
 
@@ -68,7 +68,7 @@ describe 'test `rm -d`' do
     stdout, stderr = rm('-d', *@all_files)
     stdout.should be_nil
     stderr.should be_nil
-    @all_files.each {|f| f.should_not be_exists}
+    @all_files.each {|f| f.should_not be_existed }
   end
 
   it 'can\'t rm a directory which is not empty ever add -d' do
@@ -76,7 +76,29 @@ describe 'test `rm -d`' do
     @all_files = (@enable_to_delete + @non_empty_dirs).disorder
     stdout, stderr = rm('-d', *@all_files)
     @non_empty_dirs.each {|f| stderr.should =~ /rm: #{f}: Directory not empty\n/ }
-    @enable_to_delete.each {|f| f.should_not be_exists}
-    @non_empty_dirs.each {|f| f.should be_exists}
+    @enable_to_delete.each {|f| f.should_not be_existed }
+    @non_empty_dirs.each {|f| f.should be_existed }
+  end
+end
+
+describe 'test `rm -r`' do
+  before(:each) do
+    create_hierarchical_dirs
+  end
+
+  it 'can rm all files in a directory' do
+    @all_files = @hierachical_files.disorder
+    stdout, stderr= rm('-r', @all_files)
+    stdout.should be_nil
+    stderr.should be_nil
+    @all_files.each {|f| f.should_not be_existed }
+  end
+
+  it 'can print each files\' paths when rm all files in a directory' do
+    @all_files = @hierachical_files.disorder
+    stdout, stderr= rm('-rv', @all_files)
+    stderr.should be_nil
+    @all_files_in_hierachical_files.each {|f| stdout =~ /#{f}\n/ }
+    @all_files.each {|f| f.should_not be_existed }
   end
 end
