@@ -68,14 +68,6 @@ def rm! files = []
 end
 
 def ready_to_rm abs_file, origin
-  if forcely?
-    ready_to_rm_forcely abs_file, origin
-  else # if always_confirm?
-    ready_to_rm_with_confirmation origin
-  end
-end
-
-def ready_to_rm_forcely abs_file, origin
   files_to_rm, deleted_file_list = [], []
   if File.directory?(abs_file)
     if options[:recursion]
@@ -98,10 +90,6 @@ def ready_to_rm_forcely abs_file, origin
     deleted_file_list << origin
   end
   [files_to_rm, deleted_file_list]
-end
-
-def ready_to_rm_with_confirmation origin
-  raise 'not implemented'
 end
 
 def do_rm! files
