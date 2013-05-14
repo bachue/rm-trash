@@ -122,17 +122,7 @@ end
 def create_symbolic_links_to_dirs root = Dir.mktmpdir
   @tmpdirs << root
   create_non_empty_dirs root
-  @links_to_dirs = @files.map { |f|
-    links = f + '_link'
-    FileUtils.ln_s f, links
-    links
-  }
-end
-
-def create_symbolic_links root = Dir.mktmpdir
-  @tmpdirs << root
-  create_hierarchical_dirs root
-  @links = @hierachical_files.map {|f|
+  @links_to_dirs = @non_empty_dirs.map { |f|
     links = f + '_link'
     FileUtils.ln_s f, links
     links
@@ -144,5 +134,6 @@ def create_broken_symbolic_links root = Dir.mktmpdir
   @broken_links = (1..5).map {|i|
     links = "#{root}/link_#{i}"
     FileUtils.ln_sf "#{root}/file_#{i}", links
-  }.flatten
+    links
+  }
 end

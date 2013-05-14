@@ -126,4 +126,44 @@ describe 'to delete symbolic links' do
       @files.each {|f| f.should_not be_existed }
     end
   end
+
+  context 'to delete symbolic links to directories' do
+    before(:each) do
+      create_symbolic_links_to_dirs
+    end
+
+    it 'can rm a symbolic link if the path isn\'t end with "/"' do
+      stdout, stderr = rm('-vr', *@links_to_dirs)
+      stderr.should be_nil
+      @links_to_dirs.each {|f| stdout.should =~ /#{f}\n/}
+      @links_to_dirs.each {|f| f.should_not be_existed }
+      @all_files_in_non_empty_dirs.each {|f| f.should be_existed }
+    end
+
+    it 'can follow a symbolic link if the path is end with "/"' do
+      @params = @links_to_dirs.map {|f| f + '/'}
+      @output_files = @params.map {|f| Dir[f + '/**/**'] }.flatten
+      stdout, stderr = rm('-vr', *@params)
+      stderr.should be_nil
+      @output_files.each {|f| stdout.should =~ /#{f}\n/}
+      @links_to_dirs.each {|f| f.should be_existed }
+      @non_empty_dirs.each {|f| f.should_not be_existed }
+    end
+  end
+
+  context 'to delete broken symbolic links' do
+    before(:each) do
+      create_broken_symbolic_links
+    end
+
+    it 'can rm a broken symbolic link if the path isn\'t end with "/"' do
+      stdout, stderr = rm('-v', *@broken_links)
+      stderr.should be_nil
+      @broken_links.each {|f| stdout.should =~ /#{f}\n/}
+      @broken_links.each {|f| f.should_not be_existed }
+    end
+
+    it 'can\' find target file if the path isn\'t end with "/"' do
+    end
+  end
 end
