@@ -14,15 +14,25 @@ def parse_options!
     opts.on('-d', 'Attempt to remove directories as well as other types of files.') do
       options[:directory] = true
     end
-    opts.on('-R', 'Attempt to remove the file hierarchy rooted in each file argument. ' <<
+    opts.on('-R', 'Attempt to remove the file hierarchy rooted in each file argument.  ' <<
                   'The -R option implies the -d option. If the -i option is specified, ' <<
                   'the user is prompted for confirmation before each directory\'s contents are processed ' <<
-                  '(as well as before the attempt is made to remove the directory). ' <<
+                  '(as well as before the attempt is made to remove the directory).  ' <<
                   'If the user does not respond affirmatively, the file hierarchy rooted in that directory is skipped.') do
       options[:recursion] = true
     end
     opts.on('-r', 'Equivalent to -R.') do
       options[:recursion] = true
+    end
+    opts.on('-i', 'Request confirmation before attempting to remove each file, regardless of the file\'s permissions, or ' <<
+                  'whether or not the standard input device is a terminal.  The -i option overrides any previous -f ' <<
+                  'options.') do
+      options[:confirmation] = true
+    end
+    opts.on('-f', 'Attempt to remove the files without prompting for confirmation, regardless of the file\'s permissions.  ' <<
+                  'If the file does not exist, do not display a diagnostic message or modify the exit status to ' <<
+                  'reflect an error.  The -f option overrides any previous -i options.') do
+      options[:force] = true
     end
   end.parse!
   options
@@ -63,7 +73,8 @@ def rm! files = []
     end
   end
 
-  do_rm!(files_to_rm)
+  files.clear
+  do_rm!(files_to_rm, deleted_file_list)
   deleted_file_list.each {|file| puts file} if options[:verbose]
 end
 
@@ -92,11 +103,12 @@ def ready_to_rm abs_file, origin
   [files_to_rm, deleted_file_list]
 end
 
-def do_rm! files
+def do_rm! files, origin_files
+  return if files.empty?
   if forcely?
     do_rm_forcely!(files)
   else # if always_confirm?
-    do_rm_with_confirmation(files)
+    do_rm_with_confirmation(origin_files)
   end
 end
 
@@ -104,14 +116,26 @@ def do_rm_forcely! files
   rm_all! files
 end
 
-def do_rm_with_confirmation origin
-  raise 'not implemented'
+def do_rm_with_confirmation origin_files
+  do_error_handling do
+    origin_files.each do |origin_file|
+      printf "remove #{origin_file}? "
+      if gets.downcase.start_with? 'y'
+        abs_file = File.expand_path(origin_file)
+        if File.directory?(abs_file) && !Dir[abs_file + '/*'].empty?
+          $stderr.puts "rm: #{origin_file}: Directory not empty"
+          $retval = 1
+        else
+          rm_one! abs_file
+        end
+      end
+    end
+  end
 end
 
 # To call AppleScript to delete a list of file
 # file param must be absolute path
 def rm_all! files
-  return if files.empty?
   do_error_handling do
     cmd = <<-CMD
       osascript -e '
@@ -121,19 +145,25 @@ def rm_all! files
       '
     CMD
     _, _, err = Open3.popen3 cmd
-    if error = err.gets
+    if error = err.gets(nil)
       $retval = 1
       $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
     end
   end
 end
 
-# To call AppleScript to delete a list of file
-# Will always confirm when delete each file or directory
+# To call AppleScript to delete one file
 # file param must be absolute path
-def rm_with_confirmation! files
-  return if files.empty?
-
+def rm_one! file
+  do_error_handling do
+    cmd = "osascript -e 'tell app \"Finder\" to delete POSIX file \"#{file}\"'"
+    puts "cmd: #{cmd}"
+    _, _, err = Open3.popen3 cmd
+    if error = err.gets(nil)
+      $retval = 1
+      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
+    end
+  end
 end
 
 def do_error_handling *args
@@ -141,6 +171,7 @@ def do_error_handling *args
     yield(*args)
   rescue
     $stderr.puts unexpected_error_message("#{$!}\n#{$@.join("\n")}")
+    exit(-256)
   end
 end
 
