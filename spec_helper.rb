@@ -16,7 +16,7 @@ end
 
 RSpec::Matchers.define :be_existed do
   match do |actual|
-    File.exists? actual
+    File.exists?(actual) || File.symlink?(actual)
   end
 end
 
@@ -26,7 +26,7 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do
-    FileUtils.rm_rf @tmpdirs
+    FileUtils.rm_rf @tmpdirs.uniq
   end
 end
 
@@ -107,4 +107,42 @@ def create_hierarchical_dirs root = Dir.mktmpdir
       @all_files_in_hierachical_files.concat files
     }
   }
+end
+
+def create_symbolic_links_to_files root = Dir.mktmpdir
+  @tmpdirs << root
+  create_files root
+  @links_to_files = @files.map { |f|
+    links = f + '_link'
+    FileUtils.ln_s f, links
+    links
+  }
+end
+
+def create_symbolic_links_to_dirs root = Dir.mktmpdir
+  @tmpdirs << root
+  create_non_empty_dirs root
+  @links_to_dirs = @files.map { |f|
+    links = f + '_link'
+    FileUtils.ln_s f, links
+    links
+  }
+end
+
+def create_symbolic_links root = Dir.mktmpdir
+  @tmpdirs << root
+  create_hierarchical_dirs root
+  @links = @hierachical_files.map {|f|
+    links = f + '_link'
+    FileUtils.ln_s f, links
+    links
+  }
+end
+
+def create_broken_symbolic_links root = Dir.mktmpdir
+  @tmpdirs << root
+  @broken_links = (1..5).map {|i|
+    links = "#{root}/link_#{i}"
+    FileUtils.ln_sf "#{root}/file_#{i}", links
+  }.flatten
 end

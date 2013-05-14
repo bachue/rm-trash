@@ -102,3 +102,28 @@ describe 'test `rm -r`' do
     @all_files.each {|f| f.should_not be_existed }
   end
 end
+
+describe 'to delete symbolic links' do
+  context 'to delete symbolic links to files' do
+    before(:each) do
+      create_symbolic_links_to_files
+    end
+
+    it 'can rm a symbolic link if the path isn\'t end with "/"' do
+      stdout, stderr = rm('-v', *@links_to_files)
+      stderr.should be_nil
+      @links_to_files.each {|f| stdout.should =~ /#{f}\n/}
+      @links_to_files.each {|f| f.should_not be_existed }
+      @files.each {|f| f.should be_existed }
+    end
+
+    it 'can follow a symbolic link if the path is end with "/"' do
+      @params = @links_to_files.map {|f| f + '/'}
+      stdout, stderr = rm('-v', *@params)
+      stderr.should be_nil
+      @params.each {|f| stdout.should =~ /#{f}\n/}
+      @links_to_files.each {|f| f.should be_existed }
+      @files.each {|f| f.should_not be_existed }
+    end
+  end
+end
