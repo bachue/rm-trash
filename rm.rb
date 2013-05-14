@@ -33,7 +33,7 @@ def options
 end
 alias :parse_options :options
 
-def do_rm! files = []
+def rm! files = []
   files_to_rm, deleted_file_list = [], []
   files.each do |file|
     abs_file = File.expand_path(file)
@@ -50,13 +50,9 @@ def do_rm! files = []
       end
 
       if File.exists?(abs_file) || File.symlink?(abs_file)
-        if forcely?
-          _files_to_rm, _deleted_file_list = ready_to_rm_forcely(abs_file, file)
-          files_to_rm.concat _files_to_rm
-          deleted_file_list.concat _deleted_file_list
-        else
-          do_rm_with_confirmation abs_file, file
-        end
+        _files_to_rm, _deleted_file_list = ready_to_rm(abs_file, file)
+        files_to_rm.concat _files_to_rm
+        deleted_file_list.concat _deleted_file_list
       else
         $stderr.puts "rm: #{file}: No such file or directory"
         $retval = 1
@@ -67,8 +63,16 @@ def do_rm! files = []
     end
   end
 
-  rm_all(files_to_rm) if forcely?
+  do_rm!(files_to_rm)
   deleted_file_list.each {|file| puts file} if options[:verbose]
+end
+
+def ready_to_rm abs_file, origin
+  if forcely?
+    ready_to_rm_forcely abs_file, origin
+  else # if always_confirm?
+    ready_to_rm_with_confirmation origin
+  end
 end
 
 def ready_to_rm_forcely abs_file, origin
@@ -96,13 +100,29 @@ def ready_to_rm_forcely abs_file, origin
   [files_to_rm, deleted_file_list]
 end
 
-def do_rm_with_confirmation abs_file, origin
+def ready_to_rm_with_confirmation origin
+  raise 'not implemented'
+end
+
+def do_rm! files
+  if forcely?
+    do_rm_forcely!(files)
+  else # if always_confirm?
+    do_rm_with_confirmation(files)
+  end
+end
+
+def do_rm_forcely! files
+  rm_all! files
+end
+
+def do_rm_with_confirmation origin
   raise 'not implemented'
 end
 
 # To call AppleScript to delete a list of file
 # file param must be absolute path
-def rm_all files
+def rm_all! files
   return if files.empty?
   do_error_handling do
     cmd = <<-CMD
@@ -121,9 +141,9 @@ def rm_all files
 end
 
 # To call AppleScript to delete a list of file
-# Will confirm 
+# Will always confirm when delete each file or directory
 # file param must be absolute path
-def rm_with_confirmation files
+def rm_with_confirmation! files
   return if files.empty?
 
 end
@@ -167,7 +187,7 @@ end
 
 do_error_handling do
   parse_options
-  do_rm! ARGV
+  rm! ARGV
 end
 
 exit $retval
