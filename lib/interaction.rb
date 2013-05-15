@@ -8,9 +8,18 @@ def ask_for_examine(dir)
   yield $stdin.gets.downcase.strip.start_with?('y') if block_given?
 end
 
-def check_if_not_dir(dir)
-  unless File.directory?(abs_file)
-    $stderr.puts "rm: #{file}: Not a directory"
+def yield_if_existed(file)
+  if File.exists?(file) || File.symlink?(file)
+    yield if block_given?
+  else
+    $stderr.puts "rm: #{file}: No such file or directory"
+    $retval = 1
+  end
+end
+
+def yield_if_not_dir(dir)
+  unless File.directory?(dir)
+    $stderr.puts "rm: #{dir}: Not a directory"
     $retval = 1
     yield if block_given?
   end

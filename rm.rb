@@ -15,28 +15,24 @@ def rm! files = []
   files.each do |file|
     abs_file = File.expand_path(file)
 
-    if File.exists?(abs_file) || File.symlink?(abs_file)
-      if file.end_with?('/')
-        if File.symlink?(abs_file)
-          abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
-        else
-          check_if_not_dir(abs_file) do
-            next
+    catch :skip do
+      yield_if_existed file do
+        if file.end_with?('/')
+          if File.symlink?(abs_file)
+            abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
+          else
+            yield_if_not_dir(file) do
+              throw :skip
+            end
           end
         end
-      end
 
-      if File.exists?(abs_file) || File.symlink?(abs_file)
-        _files_to_rm, _deleted_file_list = ready_to_rm(abs_file, file)
-        files_to_rm.concat _files_to_rm
-        deleted_file_list.concat _deleted_file_list
-      else
-        $stderr.puts "rm: #{file}: No such file or directory"
-        $retval = 1
+        yield_if_existed file do
+          _files_to_rm, _deleted_file_list = ready_to_rm(abs_file, file)
+          files_to_rm.concat _files_to_rm
+          deleted_file_list.concat _deleted_file_list
+        end
       end
-    else
-      $stderr.puts "rm: #{file}: No such file or directory"
-      $retval = 1
     end
   end
 
