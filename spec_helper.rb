@@ -14,13 +14,18 @@ HighLine.color_scheme = HighLine::SampleColorScheme.new
 
 def rm *args
   rm = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
-  _, stdout, stderr = Open3.popen3 [rm, *args].join(' ')
-  [stdout.gets(nil), stderr.gets(nil)]
+  stdin, stdout, stderr = Open3.popen3 [rm, *args].join(' ')
+  [stdout.gets(nil), stderr.gets(nil)].tap {
+    stdin.close
+    stdout.close
+    stderr.close
+  }
 end
 
 def rm_i *args
   rm = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
   stdin, stdout, stderr = Open3.popen3 [rm, '-i', *args].join(' ')
+  @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]
 end
 
@@ -34,10 +39,12 @@ RSpec.configure do |config|
   config.before(:each) do
     @tmpdir = Dir.mktmpdir
     @tmpdirs = Set.new [@tmpdir]
+    @io = []
   end
 
   config.after(:each) do
-    FileUtils.rm_rf @tmpdirs.to_a
+    # FileUtils.rm_rf @tmpdirs.to_a
+    @io.each(&:close)
   end
 end
 
@@ -66,7 +73,7 @@ end
 
 def create_files root = @tmpdir
   @tmpdirs << root
-  @files = (1..5).map {|i|
+  @files = (1..2).map {|i|
     file = "#{root}/file_#{i}"
     FileUtils.touch file
   }.flatten
@@ -74,7 +81,7 @@ end
 
 def create_empty_dirs root = @tmpdir
   @tmpdirs << root
-  @empty_dirs = ('a'..'e').map {|i|
+  @empty_dirs = ('a'..'b').map {|i|
     dir = "#{root}/empty_dir_#{i}"
     FileUtils.mkdir dir
   }.flatten
@@ -83,7 +90,7 @@ end
 def create_non_empty_dirs root = @tmpdir
   @tmpdirs << root
   @all_files_in_non_empty_dirs = []
-  @non_empty_dirs = ('a'..'e').map {|i|
+  @non_empty_dirs = ('a'..'b').map {|i|
     dir = "#{root}/non_empty_dir_#{i}"
     FileUtils.mkdir(dir).tap {|dirs|
       @all_files_in_non_empty_dirs.concat FileUtils.touch "#{dirs.first}/file"
@@ -94,14 +101,14 @@ end
 def create_hierarchical_dirs root = @tmpdir
   @tmpdirs << root
   @hierachical_files, @all_files_in_hierachical_files = [], []
-  ('a'..'e').each {|i0|
+  ('a'..'b').each {|i0|
     dir = "#{root}/hierachical_dir_#{i0}"
     FileUtils.mkdir(dir).tap {|dirs1|
-      ('a'..'e').each {|i1|
+      ('a'..'b').each {|i1|
         @all_files_in_hierachical_files.concat FileUtils.mkdir("#{dirs1.first}/dir_#{i1}").tap { |dirs2|
-          ('a'..'e').each {|i2|
+          ('a'..'b').each {|i2|
             @all_files_in_hierachical_files.concat FileUtils.mkdir("#{dirs2.first}/dir_#{i2}").tap { |dirs3|
-              ('a'..'e').each {|i3|
+              ('a'..'b').each {|i3|
                 @all_files_in_hierachical_files.concat FileUtils.touch("#{dirs3.first}/file_#{i3}")
               }
             }
@@ -143,7 +150,7 @@ end
 
 def create_broken_symbolic_links root = @tmpdir
   @tmpdirs << root
-  @broken_links = (1..5).map {|i|
+  @broken_links = (1..2).map {|i|
     links = "#{root}/link_#{i}"
     FileUtils.ln_sf "#{root}/file_#{i}", links
     links
@@ -152,7 +159,7 @@ end
 
 def create_ring_symbolic_links root = @tmpdir
   @tmpdirs << root
-  @ring_links = (1..5).map {|i| "#{root}/links_#{i}" }
+  @ring_links = (1..2).map {|i| "#{root}/links_#{i}" }
   @ring_links.each_with_index { |f, i|
     FileUtils.ln_sf f, @ring_links[i + 1] || @ring_links[0]
   }

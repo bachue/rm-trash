@@ -17,8 +17,8 @@ def rm! files = []
 
     catch :skip do
       assert_existed file do
-        if file.end_with?('/')
-          if File.symlink?(abs_file)
+        if file.end_with? '/'
+          if File.symlink? abs_file
             abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
           else
             do_if_not_dir file do
@@ -28,7 +28,7 @@ def rm! files = []
         end
 
         assert_existed file do
-          _files_to_rm, _deleted_file_list = ready_to_rm(abs_file, file)
+          _files_to_rm, _deleted_file_list = ready_to_rm abs_file, file
           files_to_rm.concat _files_to_rm
           deleted_file_list.concat _deleted_file_list
         end
@@ -36,7 +36,7 @@ def rm! files = []
     end
   end
 
-  deleted_file_list = do_rm!(files_to_rm, deleted_file_list)
+  deleted_file_list = do_rm! files_to_rm, deleted_file_list
   deleted_file_list.each {|file| puts file} if verbose?
 end
 

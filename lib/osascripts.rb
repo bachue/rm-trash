@@ -21,10 +21,13 @@ end
 
 def run cmd
   do_error_handling do
-    _, _, err = Open3.popen3 cmd
-    if error = err.gets(nil)
+    stdin, stdout, stderr = Open3.popen3 cmd
+    if error = stderr.gets(nil)
       $retval = 1
       $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
     end
+    stdin.close
+    stdout.close
+    stderr.close
   end
 end

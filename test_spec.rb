@@ -1,5 +1,7 @@
 $: << File.expand_path(File.dirname(__FILE__))
+$: << File.expand_path(File.dirname(__FILE__) + '/lib')
 require 'spec_helper'
+require 'array_tree_order'
 
 describe 'test `rm`' do
   before(:each) do
@@ -88,7 +90,7 @@ describe 'test `rm -r`' do
 
   it 'can rm all files in a directory' do
     @all_files = @hierachical_files.disorder
-    stdout, stderr= rm('-r', @all_files)
+    stdout, stderr = rm('-r', @all_files)
     stdout.should be_nil
     stderr.should be_nil
     @all_files.each {|f| f.should_not be_existed }
@@ -96,7 +98,7 @@ describe 'test `rm -r`' do
 
   it 'can print each files\' paths when rm all files in a directory' do
     @all_files = @hierachical_files.disorder
-    stdout, stderr= rm('-rv', @all_files)
+    stdout, stderr = rm('-rv', @all_files)
     stderr.should be_nil
     @all_files_in_hierachical_files.each {|f| stdout =~ /#{f}\n/ }
     @all_files.each {|f| f.should_not be_existed }
@@ -241,7 +243,7 @@ describe 'test `rm -i`' do
     end
   end
 
-  context 'tp delete empty directories with confirmation' do
+  context 'to delete empty directories with confirmation' do
     before(:each) do
       create_files
       create_empty_dirs
@@ -282,6 +284,37 @@ describe 'test `rm -i`' do
       @enable_to_delete.each {|f| stdout.gets("\n").should == "#{f}\n" }
       @enable_to_delete.each {|f| f.should_not be_existed }
       @non_empty_dirs.each {|f| f.should be_existed }
+    end
+  end
+
+  context 'to delete hierarchical directories with confirmation' do
+    before(:each) do
+      create_hierarchical_dirs
+    end
+
+    it 'can rm all files in a directory with confirmation' do
+      @all_files = @hierachical_files
+      @deleted_files = []
+      stdin, stdout, stderr = rm_i('-rv', @all_files)
+      @all_files_in_hierachical_files.tree_order(true).each {|f|
+        stderr.gets('? ').should == if File.directory? f
+          "examine files in directory #{f}? "
+        else
+          @deleted_files << f
+          "remove #{f}? "
+        end
+        stdin.puts 'y'
+      }
+      @all_files_in_hierachical_files.select {|f| File.directory? f }.tree_order.each {|f|
+        @deleted_files << f
+        stderr.gets('? ').should == "remove #{f}? "
+        stdin.puts 'y'
+      }
+
+       @deleted_files.each { |f|
+        stdout.gets("\n").should == "#{f}\n"
+      }
+      @all_files.each {|f| f.should_not be_existed }
     end
   end
 end
