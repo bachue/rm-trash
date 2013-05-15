@@ -4,6 +4,7 @@ require 'bundler/setup'
 require 'tmpdir'
 require 'open3'
 require 'highline/import'
+require 'set'
 
 ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
 
@@ -24,11 +25,11 @@ end
 
 RSpec.configure do |config|
   config.before(:each) do
-    @tmpdirs = []
+    @tmpdirs = Set.new []
   end
 
   config.after(:each) do
-    FileUtils.rm_rf @tmpdirs.uniq
+    FileUtils.rm_rf @tmpdirs.to_a
   end
 end
 
