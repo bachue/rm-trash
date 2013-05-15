@@ -5,6 +5,7 @@ require 'optparse'
 require 'pp'
 require 'open3'
 require 'option_parser'
+require 'interaction'
 require 'array_tree_order'
 
 $retval = 0
@@ -18,10 +19,10 @@ def rm! files = []
       if file.end_with?('/')
         if File.symlink?(abs_file)
           abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
-        elsif !File.directory?(abs_file)
-          $stderr.puts "rm: #{file}: Not a directory"
-          $retval = 1
-          next
+        else
+          check_if_not_dir(abs_file) do
+            next
+          end
         end
       end
 
@@ -91,15 +92,15 @@ def do_rm_with_confirmation origin_files
         abs_file = File.expand_path origin_file
         next if abs_file.start_with? ignored_dir
         if File.directory?(abs_file)
-          $stderr.print "examine files in directory #{origin_file}? "
-          if $stdin.gets.downcase.strip.start_with? 'y'
-            files_to_confirm << origin_file
-          else
-            ignored_dir = abs_file
+          ask_for_examine origin_file do |to_examine|
+            if to_examine
+              files_to_confirm << origin_file
+            else
+              ignored_dir = abs_file
+            end
           end
         else
-          $stderr.print "remove #{origin_file}? "
-          if $stdin.gets.downcase.strip.start_with? 'y'
+          ask_for_remove origin_file do
             rm_one! abs_file
           end
         end
@@ -109,8 +110,7 @@ def do_rm_with_confirmation origin_files
     end
 
     files_to_confirm.tree_order.each do |origin_file|
-      $stderr.print "remove #{origin_file}? "
-      if $stdin.gets.downcase.strip.start_with? 'y'
+      ask_for_remove origin_file do
         abs_file = File.expand_path origin_file
         if File.directory?(abs_file) && !Dir[abs_file + '/*'].empty?
           $stderr.puts "rm: #{origin_file}: Directory not empty"
