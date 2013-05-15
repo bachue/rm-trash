@@ -82,7 +82,7 @@ def ready_to_rm abs_file, origin
   if File.directory?(abs_file)
     if options[:recursion]
       files_to_rm << abs_file
-      deleted_file_list.concat Dir[origin + '{/**/**,}'].traverse_files_recursively
+      deleted_file_list.concat Dir[origin + '{/**/**,}'].tree_order
     elsif options[:directory]
       if Dir[abs_file + '/*'].empty?
         files_to_rm << abs_file
@@ -117,10 +117,31 @@ end
 
 def do_rm_with_confirmation origin_files
   do_error_handling do
-    origin_files.each do |origin_file|
-      printf "remove #{origin_file}? "
-      if $stdin.gets.downcase.start_with? 'y'
-        abs_file = File.expand_path(origin_file)
+
+    files_to_confirm = []
+    ignored_dir = nil
+    origin_files.tree_order(true).each {|origin_file|
+      abs_file = File.expand_path origin_file
+      next if abs_file.start_with? ignored_dir
+      if File.directory?(abs_file)
+        print "examine files in directory #{origin_file}? "
+        if $stdin.gets.downcase.strip.start_with? 'y'
+          files_to_confirm << origin_file
+        else
+          ignored_dir = abs_file
+        end
+      else
+        print "remove #{origin_file}? "
+        if $stdin.gets.downcase.strip.start_with? 'y'
+          rm_one! abs_file
+        end
+      end
+    }
+
+    files_to_confirm.tree_order.each do |origin_file|
+      print "remove #{origin_file}? "
+      if $stdin.gets.downcase.strip.start_with? 'y'
+        abs_file = File.expand_path origin_file
         if File.directory?(abs_file) && !Dir[abs_file + '/*'].empty?
           $stderr.puts "rm: #{origin_file}: Directory not empty"
           $retval = 1
@@ -191,11 +212,12 @@ def always_confirm?
 end
 
 class Array
-  def traverse_files_recursively
+  def tree_order(preorder = false)
+    mag_num = preorder ? -1 : 1
     sort { |f1, f2|
       case
-      when f1.start_with?(f2); -1
-      when f2.start_with?(f1); 1
+      when f1.start_with?(f2); -mag_num
+      when f2.start_with?(f1); mag_num
       else f1 <=> f2
       end
     }
