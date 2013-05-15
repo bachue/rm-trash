@@ -122,24 +122,28 @@ def do_rm_with_confirmation origin_files
   do_error_handling do
 
     files_to_confirm = []
-    ignored_dir = nil
-    origin_files.tree_order(true).each {|origin_file|
-      abs_file = File.expand_path origin_file
-      next if abs_file.start_with? ignored_dir
-      if File.directory?(abs_file)
-        $stderr.print "examine files in directory #{origin_file}? "
-        if $stdin.gets.downcase.strip.start_with? 'y'
-          files_to_confirm << origin_file
+    if options[:recursion]
+      ignored_dir = nil
+      origin_files.tree_order(true).each {|origin_file|
+        abs_file = File.expand_path origin_file
+        next if abs_file.start_with? ignored_dir
+        if File.directory?(abs_file)
+          $stderr.print "examine files in directory #{origin_file}? "
+          if $stdin.gets.downcase.strip.start_with? 'y'
+            files_to_confirm << origin_file
+          else
+            ignored_dir = abs_file
+          end
         else
-          ignored_dir = abs_file
+          $stderr.print "remove #{origin_file}? "
+          if $stdin.gets.downcase.strip.start_with? 'y'
+            rm_one! abs_file
+          end
         end
-      else
-        $stderr.print "remove #{origin_file}? "
-        if $stdin.gets.downcase.strip.start_with? 'y'
-          rm_one! abs_file
-        end
-      end
-    }
+      }
+    else
+      files_to_confirm = origin_files
+    end
 
     files_to_confirm.tree_order.each do |origin_file|
       $stderr.print "remove #{origin_file}? "
