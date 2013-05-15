@@ -141,13 +141,21 @@ def rm_one! file
   run "osascript -e 'tell app \"Finder\" to delete POSIX file \"#{file}\"'"
 end
 
-def do_error_handling *args
-  begin
-    yield(*args)
-  rescue
-    $stderr.puts unexpected_error_message("#{$!}\n#{$@.join("\n")}")
-    exit(-256)
+def run cmd
+  do_error_handling do
+    _, _, err = Open3.popen3 cmd
+    if error = err.gets(nil)
+      $retval = 1
+      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
+    end
   end
+end
+
+def do_error_handling *args
+  yield(*args)
+rescue
+  $stderr.puts unexpected_error_message("#{$!}\n#{$@.join("\n")}")
+  exit(-256)
 end
 
 def unexpected_error_message output = nil
@@ -157,16 +165,6 @@ Global Variables: #{ PP.pp(global_variables.inject({}) {|h, gb| h[gb] = eval(gb.
 Instance Variables: #{ PP.pp(instance_variables.inject({}) {|h, ib| h[ib] = instance_variable_get(ib.to_s); h}, '').strip }
 It should be a bug, please report this problem to bachue.shu@gmail.com!
   """
-end
-
-def run cmd
-  do_error_handling do
-    _, _, err = Open3.popen3 cmd
-    if error = err.gets(nil)
-      $retval = 1
-      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
-    end
-  end
 end
 
 do_error_handling do
