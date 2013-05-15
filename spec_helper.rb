@@ -5,6 +5,8 @@ require 'tmpdir'
 require 'open3'
 require 'highline/import'
 
+ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
+
 Bundler.require :test
 HighLine.color_scheme = HighLine::SampleColorScheme.new
 
@@ -31,6 +33,7 @@ RSpec.configure do |config|
 end
 
 at_exit {
+  if $stdin.tty?
     answer = ask <<-ASK
 <%= color('Are you sure you want to permanently erase the items in the Trash? [', :notice) %><%= color('y', :error) %><%= color('/', :notice) %><%= color('N', :debug) %><%= color(']', :notice) %>
     ASK
@@ -43,8 +46,8 @@ at_exit {
     else
       say '<%= color(\'See you :)\', :debug) %>'
     end
+  end
 }
-
 
 class Array
   def disorder
