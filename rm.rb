@@ -76,7 +76,6 @@ end
 
 def do_rm_with_confirmation origin_files
   do_error_handling do
-
     files_to_confirm = []
     if rm_r?
       ignored_dir = nil
@@ -103,9 +102,8 @@ def do_rm_with_confirmation origin_files
 
     files_to_confirm.tree_order.each do |origin_file|
       ask_for_remove origin_file do
-        abs_file = File.expand_path origin_file
         yield_if_can_rm_d origin_file do
-          rm_one! abs_file
+          rm_one! File.expand_path(abs_file)
         end
       end
     end
