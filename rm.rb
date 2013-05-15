@@ -16,18 +16,18 @@ def rm! files = []
     abs_file = File.expand_path(file)
 
     catch :skip do
-      yield_if_existed file do
+      assert_existed file do
         if file.end_with?('/')
           if File.symlink?(abs_file)
             abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
           else
-            yield_if_not_dir file do
+            do_if_not_dir file do
               throw :skip
             end
           end
         end
 
-        yield_if_existed file do
+        assert_existed file do
           _files_to_rm, _deleted_file_list = ready_to_rm(abs_file, file)
           files_to_rm.concat _files_to_rm
           deleted_file_list.concat _deleted_file_list
@@ -47,12 +47,12 @@ def ready_to_rm abs_file, origin
       files_to_rm << abs_file
       deleted_file_list.concat Dir[origin + '{/**/**,}'].tree_order
     elsif rm_d?
-      yield_if_can_rm_d origin do
+      assert_not_recursive origin do
         files_to_rm << abs_file
         deleted_file_list << origin
       end
     else
-      yield_if_dir origin
+      error origin, :is_dir
     end
   else
     files_to_rm << abs_file
@@ -102,8 +102,8 @@ def do_rm_with_confirmation origin_files
 
     files_to_confirm.tree_order.each do |origin_file|
       ask_for_remove origin_file do
-        yield_if_can_rm_d origin_file do
-          rm_one! File.expand_path(abs_file)
+        assert_not_recursive origin_file do
+          rm_one! File.expand_path(origin_file)
         end
       end
     end

@@ -8,38 +8,38 @@ def ask_for_examine(dir)
   yield $stdin.gets.downcase.strip.start_with?('y') if block_given?
 end
 
-def yield_if_existed(file)
+def assert_existed(file)
   if File.exists?(file) || File.symlink?(file)
     yield if block_given?
   else
-    $stderr.puts "rm: #{file}: No such file or directory"
-    $retval = 1
+    error file, :no_file
   end
 end
 
-def yield_if_dir(dir)
-  if File.directory?(dir)
-    $stderr.puts "rm: #{dir}: is a directory"
-    $retval = 1
-    yield if block_given?
-  end
-end
-
-def yield_if_not_dir(dir)
+def do_if_not_dir(dir)
   unless File.directory?(dir)
-    $stderr.puts "rm: #{dir}: Not a directory"
-    $retval = 1
+    error dir, :not_dir
     yield if block_given?
   end
 end
 
-def yield_if_can_rm_d(dir)
+def assert_not_recursive(dir)
   if !File.directory?(dir) || Dir[dir + '/*'].empty?
     yield if block_given?
   else
-    $stderr.puts "rm: #{dir}: Directory not empty"
-    $retval = 1
+    error dir, :not_empty
   end
+end
+
+def error(file, err)
+  error = "rm: #{file}: " + {
+    :no_file => 'No such file or directory',
+    :not_dir => 'Not a directory',
+    :not_empty => 'Directory not empty',
+    :is_dir => 'is a directory'
+  }[err]
+  $stderr.puts error
+  $retval = 1
 end
 
 def do_error_handling *args
