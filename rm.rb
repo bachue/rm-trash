@@ -21,7 +21,7 @@ def rm! files = []
           if File.symlink?(abs_file)
             abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
           else
-            yield_if_not_dir(file) do
+            yield_if_not_dir file do
               throw :skip
             end
           end
@@ -52,8 +52,7 @@ def ready_to_rm abs_file, origin
         deleted_file_list << origin
       end
     else
-      $stderr.puts "rm: #{origin}: is a directory"
-      $retval = 1
+      yield_if_dir origin
     end
   else
     files_to_rm << abs_file
@@ -65,9 +64,9 @@ end
 def do_rm! files, origin_files
   return if files.empty?
   if forcely?
-    do_rm_forcely!(files)
+    do_rm_forcely! files
   else # if always_confirm?
-    do_rm_with_confirmation(origin_files)
+    do_rm_with_confirmation origin_files
   end
 end
 
@@ -84,7 +83,7 @@ def do_rm_with_confirmation origin_files
       origin_files.tree_order(true).each {|origin_file|
         abs_file = File.expand_path origin_file
         next if abs_file.start_with? ignored_dir
-        if File.directory?(abs_file)
+        if File.directory? abs_file
           ask_for_examine origin_file do |to_examine|
             if to_examine
               files_to_confirm << origin_file

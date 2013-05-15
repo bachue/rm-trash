@@ -17,6 +17,14 @@ def yield_if_existed(file)
   end
 end
 
+def yield_if_dir(dir)
+  if File.directory?(dir)
+    $stderr.puts "rm: #{dir}: is a directory"
+    $retval = 1
+    yield if block_given?
+  end
+end
+
 def yield_if_not_dir(dir)
   unless File.directory?(dir)
     $stderr.puts "rm: #{dir}: Not a directory"
