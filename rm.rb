@@ -73,7 +73,6 @@ def rm! files = []
     end
   end
 
-  files.clear
   do_rm!(files_to_rm, deleted_file_list)
   deleted_file_list.each {|file| puts file} if options[:verbose]
 end
@@ -120,7 +119,7 @@ def do_rm_with_confirmation origin_files
   do_error_handling do
     origin_files.each do |origin_file|
       printf "remove #{origin_file}? "
-      if gets.downcase.start_with? 'y'
+      if $stdin.gets.downcase.start_with? 'y'
         abs_file = File.expand_path(origin_file)
         if File.directory?(abs_file) && !Dir[abs_file + '/*'].empty?
           $stderr.puts "rm: #{origin_file}: Directory not empty"
@@ -157,7 +156,6 @@ end
 def rm_one! file
   do_error_handling do
     cmd = "osascript -e 'tell app \"Finder\" to delete POSIX file \"#{file}\"'"
-    puts "cmd: #{cmd}"
     _, _, err = Open3.popen3 cmd
     if error = err.gets(nil)
       $retval = 1
