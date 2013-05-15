@@ -4,47 +4,10 @@ $: << File.expand_path(File.dirname(__FILE__) + '/lib')
 require 'optparse'
 require 'pp'
 require 'open3'
+require 'option_parser'
 require 'array_tree_order'
 
 $retval = 0
-
-def parse_options!
-  options = {}
-  OptionParser.new do |opts|
-    opts.on('-v', 'Be verbose when deleting files, showing them as they are removed.') do
-      options[:verbose] = true
-    end
-    opts.on('-d', 'Attempt to remove directories as well as other types of files.') do
-      options[:directory] = true
-    end
-    opts.on('-R', 'Attempt to remove the file hierarchy rooted in each file argument.  ' <<
-                  'The -R option implies the -d option. If the -i option is specified, ' <<
-                  'the user is prompted for confirmation before each directory\'s contents are processed ' <<
-                  '(as well as before the attempt is made to remove the directory).  ' <<
-                  'If the user does not respond affirmatively, the file hierarchy rooted in that directory is skipped.') do
-      options[:recursion] = true
-    end
-    opts.on('-r', 'Equivalent to -R.') do
-      options[:recursion] = true
-    end
-    opts.on('-i', 'Request confirmation before attempting to remove each file, regardless of the file\'s permissions, or ' <<
-                  'whether or not the standard input device is a terminal.  The -i option overrides any previous -f ' <<
-                  'options.') do
-      options[:confirmation] = true
-    end
-    opts.on('-f', 'Attempt to remove the files without prompting for confirmation, regardless of the file\'s permissions.  ' <<
-                  'If the file does not exist, do not display a diagnostic message or modify the exit status to ' <<
-                  'reflect an error.  The -f option overrides any previous -i options.') do
-      options[:force] = true
-    end
-  end.parse!
-  options
-end
-
-def options
-  @options ||= parse_options!
-end
-alias :parse_options :options
 
 def rm! files = []
   files_to_rm, deleted_file_list = [], []
@@ -77,16 +40,16 @@ def rm! files = []
   end
 
   do_rm!(files_to_rm, deleted_file_list)
-  deleted_file_list.each {|file| puts file} if options[:verbose]
+  deleted_file_list.each {|file| puts file} if verbose?
 end
 
 def ready_to_rm abs_file, origin
   files_to_rm, deleted_file_list = [], []
   if File.directory?(abs_file)
-    if options[:recursion]
+    if rm_r?
       files_to_rm << abs_file
       deleted_file_list.concat Dir[origin + '{/**/**,}'].tree_order
-    elsif options[:directory]
+    elsif rm_d?
       if Dir[abs_file + '/*'].empty?
         files_to_rm << abs_file
         deleted_file_list << origin
@@ -122,7 +85,7 @@ def do_rm_with_confirmation origin_files
   do_error_handling do
 
     files_to_confirm = []
-    if options[:recursion]
+    if rm_r?
       ignored_dir = nil
       origin_files.tree_order(true).each {|origin_file|
         abs_file = File.expand_path origin_file
@@ -204,14 +167,6 @@ def run cmd
       $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
     end
   end
-end
-
-def forcely?
-  !options[:confirmation] || options[:force]
-end
-
-def always_confirm?
-  !forcely?
 end
 
 do_error_handling do
