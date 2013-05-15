@@ -156,33 +156,19 @@ end
 # To call AppleScript to delete a list of file
 # file param must be absolute path
 def rm_all! files
-  do_error_handling do
-    cmd = <<-CMD
-      osascript -e '
-        tell app "Finder"
-          #{files.map {|file| "delete POSIX file \"#{file}\"" }.join("\n")}
-        end tell
-      '
-    CMD
-    _, _, err = Open3.popen3 cmd
-    if error = err.gets(nil)
-      $retval = 1
-      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
-    end
-  end
+  run <<-CMD
+    osascript -e '
+      tell app "Finder"
+        #{files.map {|file| "delete POSIX file \"#{file}\"" }.join("\n")}
+      end tell
+    '
+  CMD
 end
 
 # To call AppleScript to delete one file
 # file param must be absolute path
 def rm_one! file
-  do_error_handling do
-    cmd = "osascript -e 'tell app \"Finder\" to delete POSIX file \"#{file}\"'"
-    _, _, err = Open3.popen3 cmd
-    if error = err.gets(nil)
-      $retval = 1
-      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
-    end
-  end
+  run "osascript -e 'tell app \"Finder\" to delete POSIX file \"#{file}\"'"
 end
 
 def do_error_handling *args
@@ -201,6 +187,16 @@ Global Variables: #{ PP.pp(global_variables.inject({}) {|h, gb| h[gb] = eval(gb.
 Instance Variables: #{ PP.pp(instance_variables.inject({}) {|h, ib| h[ib] = instance_variable_get(ib.to_s); h}, '').strip }
 It should be a bug, please report this problem to bachue.shu@gmail.com!
   """
+end
+
+def run cmd
+  do_error_handling do
+    _, _, err = Open3.popen3 cmd
+    if error = err.gets(nil)
+      $retval = 1
+      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
+    end
+  end
 end
 
 def forcely?
