@@ -208,8 +208,7 @@ describe 'test `rm -i`' do
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'y'
       }
-      stdout = stdout.gets nil
-      @files.each {|f| stdout.should =~ /#{f}\n/ }
+      @files.each {|f| stdout.gets("\n").should == "#{f}\n" }
       @files.each {|f| f.should_not be_existed }
     end
 
@@ -217,30 +216,72 @@ describe 'test `rm -i`' do
       @not_existed_files = @files.map {|f| f + '_' }
       @all_files = @files + @not_existed_files
       stdin, stdout, stderr = rm_i('-iv', *@all_files)
-      @not_existed_files.each {|f| stderr.gets("\n").should =~ /rm: #{f}: No such file or directory\n/ }
+      @not_existed_files.each {|f| stderr.gets("\n").should == "rm: #{f}: No such file or directory\n" }
 
       @files.each {|f|
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'y'
       }
-      stdout = stdout.gets nil
-      @files.each {|f| stdout.should =~ /#{f}\n/ }
+      @files.each {|f| stdout.gets("\n").should == "#{f}\n" }
       @files.each {|f| f.should_not be_existed }
     end
 
     it 'should add -d if try to rm a directory' do
-      @all_files = (@files + @empty_dirs)
+      @all_files = @files + @empty_dirs
       stdin, stdout, stderr = rm_i('-v', *@all_files)
-      @empty_dirs.each {|f| stderr.gets("\n").should =~ /rm: #{f}: is a directory\n/ }
+      @empty_dirs.each {|f| stderr.gets("\n").should == "rm: #{f}: is a directory\n" }
 
       @files.each {|f|
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'y'
       }
-      stdout = stdout.gets nil
-      @files.each {|f| stdout.should =~ /#{f}\n/ }
+      @files.each {|f| stdout.gets("\n").should == "#{f}\n" }
       @files.each {|f| f.should_not be_existed }
       @empty_dirs.each {|f| f.should be_existed }
+    end
+  end
+
+  context 'tp delete empty directories with confirmation' do
+    before(:each) do
+      create_files
+      create_empty_dirs
+      create_non_empty_dirs
+    end
+
+    it 'should rm empty directories' do
+      @all_files = @empty_dirs + @files
+      stdin, stdout, stderr = rm_i('-vd', *@all_files)
+      @all_files.each { |f|
+        stderr.gets('? ').should == "remove #{f}? "
+        stdin.puts 'y'
+      }
+      @all_files.each {|f| stdout.gets("\n").should == "#{f}\n" }
+      @all_files.each {|f| f.should_not be_existed }
+    end
+
+    it 'shouldn\'t rm anything without confirmation' do
+      @all_files = @empty_dirs + @files
+      stdin, stdout, stderr = rm_i('-vd', *@all_files)
+      @all_files.each { |f|
+        stderr.gets('? ').should == "remove #{f}? "
+        stdin.puts 'n'
+      }
+      stdout.gets(nil).should be_nil
+      @all_files.each {|f| f.should be_existed }
+    end
+
+    it 'can\'t rm a directory which is not empty ever add -d' do
+      @enable_to_delete = @empty_dirs + @files
+      @all_files = @enable_to_delete + @non_empty_dirs
+      stdin, stdout, stderr = rm_i('-vd', *@all_files)
+      @non_empty_dirs.each {|f| stderr.gets("\n").should == "rm: #{f}: Directory not empty\n" }
+      @enable_to_delete.each { |f|
+        stderr.gets('? ').should == "remove #{f}? "
+        stdin.puts 'y'
+      }
+      @enable_to_delete.each {|f| stdout.gets("\n").should == "#{f}\n" }
+      @enable_to_delete.each {|f| f.should_not be_existed }
+      @non_empty_dirs.each {|f| f.should be_existed }
     end
   end
 end

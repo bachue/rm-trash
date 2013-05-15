@@ -32,7 +32,8 @@ end
 
 RSpec.configure do |config|
   config.before(:each) do
-    @tmpdirs = Set.new []
+    @tmpdir = Dir.mktmpdir
+    @tmpdirs = Set.new [@tmpdir]
   end
 
   config.after(:each) do
@@ -63,7 +64,7 @@ class Array
   end
 end
 
-def create_files root = Dir.mktmpdir
+def create_files root = @tmpdir
   @tmpdirs << root
   @files = (1..5).map {|i|
     file = "#{root}/file_#{i}"
@@ -71,7 +72,7 @@ def create_files root = Dir.mktmpdir
   }.flatten
 end
 
-def create_empty_dirs root = Dir.mktmpdir
+def create_empty_dirs root = @tmpdir
   @tmpdirs << root
   @empty_dirs = ('a'..'e').map {|i|
     dir = "#{root}/empty_dir_#{i}"
@@ -79,7 +80,7 @@ def create_empty_dirs root = Dir.mktmpdir
   }.flatten
 end
 
-def create_non_empty_dirs root = Dir.mktmpdir
+def create_non_empty_dirs root = @tmpdir
   @tmpdirs << root
   @all_files_in_non_empty_dirs = []
   @non_empty_dirs = ('a'..'e').map {|i|
@@ -90,7 +91,7 @@ def create_non_empty_dirs root = Dir.mktmpdir
   }.flatten
 end
 
-def create_hierarchical_dirs root = Dir.mktmpdir
+def create_hierarchical_dirs root = @tmpdir
   @tmpdirs << root
   @hierachical_files, @all_files_in_hierachical_files = [], []
   ('a'..'e').each {|i0|
@@ -120,7 +121,7 @@ def create_hierarchical_dirs root = Dir.mktmpdir
   }
 end
 
-def create_symbolic_links_to_files root = Dir.mktmpdir
+def create_symbolic_links_to_files root = @tmpdir
   @tmpdirs << root
   create_files root
   @links_to_files = @files.map { |f|
@@ -130,7 +131,7 @@ def create_symbolic_links_to_files root = Dir.mktmpdir
   }
 end
 
-def create_symbolic_links_to_dirs root = Dir.mktmpdir
+def create_symbolic_links_to_dirs root = @tmpdir
   @tmpdirs << root
   create_non_empty_dirs root
   @links_to_dirs = @non_empty_dirs.map { |f|
@@ -140,7 +141,7 @@ def create_symbolic_links_to_dirs root = Dir.mktmpdir
   }
 end
 
-def create_broken_symbolic_links root = Dir.mktmpdir
+def create_broken_symbolic_links root = @tmpdir
   @tmpdirs << root
   @broken_links = (1..5).map {|i|
     links = "#{root}/link_#{i}"
@@ -149,7 +150,7 @@ def create_broken_symbolic_links root = Dir.mktmpdir
   }
 end
 
-def create_ring_symbolic_links root = Dir.mktmpdir
+def create_ring_symbolic_links root = @tmpdir
   @tmpdirs << root
   @ring_links = (1..5).map {|i| "#{root}/links_#{i}" }
   @ring_links.each_with_index { |f, i|
