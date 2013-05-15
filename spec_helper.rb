@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'bundler'
 require 'bundler/setup'
+require 'fileutils'
 require 'tmpdir'
 require 'open3'
 require 'highline/import'
@@ -15,6 +16,12 @@ def rm *args
   rm = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
   _, stdout, stderr = Open3.popen3 [rm, *args].join(' ')
   [stdout.gets(nil), stderr.gets(nil)]
+end
+
+def rm_i *args
+  rm = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
+  stdin, stdout, stderr = Open3.popen3 [rm, '-i', *args].join(' ')
+  [stdin, stdout, stderr]
 end
 
 RSpec::Matchers.define :be_existed do
