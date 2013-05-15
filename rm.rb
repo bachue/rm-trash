@@ -1,7 +1,10 @@
 #!/usr/bin/env ruby
+$: << File.expand_path(File.dirname(__FILE__) + '/lib')
+
 require 'optparse'
 require 'pp'
 require 'open3'
+require 'array_tree_order'
 
 $retval = 0
 
@@ -205,19 +208,6 @@ end
 
 def always_confirm?
   !forcely?
-end
-
-class Array
-  def tree_order(preorder = false)
-    mag_num = preorder ? -1 : 1
-    sort { |f1, f2|
-      case
-      when f1.start_with?(f2); -mag_num
-      when f2.start_with?(f1); mag_num
-      else f1 <=> f2
-      end
-    }
-  end
 end
 
 do_error_handling do
