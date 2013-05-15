@@ -47,12 +47,9 @@ def ready_to_rm abs_file, origin
       files_to_rm << abs_file
       deleted_file_list.concat Dir[origin + '{/**/**,}'].tree_order
     elsif rm_d?
-      if Dir[abs_file + '/*'].empty?
+      yield_if_can_rm_d origin do
         files_to_rm << abs_file
         deleted_file_list << origin
-      else
-        $stderr.puts "rm: #{origin}: Directory not empty"
-        $retval = 1
       end
     else
       $stderr.puts "rm: #{origin}: is a directory"
@@ -108,10 +105,7 @@ def do_rm_with_confirmation origin_files
     files_to_confirm.tree_order.each do |origin_file|
       ask_for_remove origin_file do
         abs_file = File.expand_path origin_file
-        if File.directory?(abs_file) && !Dir[abs_file + '/*'].empty?
-          $stderr.puts "rm: #{origin_file}: Directory not empty"
-          $retval = 1
-        else
+        yield_if_can_rm_d origin_file do
           rm_one! abs_file
         end
       end

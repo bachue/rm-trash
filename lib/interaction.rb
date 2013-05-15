@@ -24,3 +24,12 @@ def yield_if_not_dir(dir)
     yield if block_given?
   end
 end
+
+def yield_if_can_rm_d(dir)
+  if !File.directory?(dir) || Dir[dir + '/*'].empty?
+    yield if block_given?
+  else
+    $stderr.puts "rm: #{dir}: Directory not empty"
+    $retval = 1
+  end
+end
