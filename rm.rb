@@ -7,6 +7,7 @@ require 'osascripts'
 require 'option_parser'
 require 'interaction'
 require 'array_tree_order'
+require 'string_color'
 
 $retval = 0
 
@@ -42,7 +43,7 @@ def rm! files = []
   end
 
   do_rm! files_to_rm, deleted_file_list do |delete_file|
-    puts delete_file if verbose?
+    puts delete_file.bold if verbose?
   end
 end
 

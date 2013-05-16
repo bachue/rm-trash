@@ -6,6 +6,7 @@ require 'tmpdir'
 require 'open3'
 require 'highline/import'
 require 'set'
+require 'string_color'
 
 ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
 
@@ -25,6 +26,14 @@ def rm_i *args
   stdin, stdout, stderr = Open3.popen3 [RM, '-i', *args].join(' ')
   @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]
+end
+
+class IO # Auto remove all color here to make test easiler
+  alias_method :gets_without_strip_color, :gets
+  def gets *args
+    str = gets_without_strip_color(*args)
+    str.strip_color unless str.nil?
+  end
 end
 
 RSpec::Matchers.define :be_existed do

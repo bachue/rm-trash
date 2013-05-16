@@ -1,5 +1,6 @@
 require 'open3'
 require 'interaction'
+require 'string_color'
 
 # To call AppleScript to delete a list of file
 # file param must be absolute path
@@ -24,7 +25,7 @@ def run cmd
     stdin, stdout, stderr = Open3.popen3 cmd
     if error = stderr.gets(nil)
       $retval = 1
-      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
+      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'").red
     end
     [stdin, stdout, stderr].each(&:close)
   end

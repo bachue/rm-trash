@@ -25,4 +25,8 @@ class String
   def bold
     "\e[1m#{self}\e[0m"
   end
+
+  def strip_color
+    gsub(/\e\[.*?(\d)+m/ , '')
+  end
 end

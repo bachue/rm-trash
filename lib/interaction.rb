@@ -1,3 +1,5 @@
+require 'string_color'
+
 def warn_if_any_current_or_parent_directory(paths)
   result = []
   err = false
@@ -15,12 +17,12 @@ def warn_if_any_current_or_parent_directory(paths)
 end
 
 def ask_for_remove(file)
-  $stderr.print "remove #{file}? "
+  $stderr.print "remove #{file}? ".bright_yellow
   yield if block_given? && $stdin.gets.downcase.strip.start_with?('y')
 end
 
 def ask_for_examine(dir)
-  $stderr.print "examine files in directory #{dir}? "
+  $stderr.print "examine files in directory #{dir}? ".bright_yellow
   yield $stdin.gets.downcase.strip.start_with?('y') if block_given?
 end
 
@@ -55,14 +57,14 @@ def error(file, err)
     :is_dir => "#{file}: is a directory",
     :current_or_parent_dir => '"." and ".." may not be removed'
   }[err]
-  $stderr.puts error
+  $stderr.puts error.red
   $retval = 1
 end
 
 def do_error_handling *args
   yield(*args)
 rescue
-  $stderr.puts unexpected_error_message("#{$!}\n#{$@.join("\n")}")
+  $stderr.puts unexpected_error_message("#{$!}\n#{$@.join("\n")}").red
   exit(-256)
 end
 
