@@ -10,8 +10,13 @@ require 'array_tree_order'
 
 $retval = 0
 
+ARGV << '--help' if ARGV.empty?
+
 def rm! files = []
   files_to_rm, deleted_file_list = [], []
+
+  files = warn_if_any_current_or_parent_directory(files)
+
   files.each do |file|
     abs_file = File.expand_path(file)
 

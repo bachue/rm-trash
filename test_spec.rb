@@ -329,44 +329,45 @@ describe 'test `rm -i`' do
     end
 
     it 'should reject to delete "."' do
-      FileUtils.cd File.dirname(@tmpdir) do
+      FileUtils.cd @tmpdir do
         @params = ['.', '*'].disorder
         stdout, stderr = rm('-v', *@params)
         stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
-        @files.each {|f| stdout.gets.should == "#{f}\n" }
+        @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
         @files.each {|f| f.should_not be_existed }
       end
     end
 
     it 'should reject to delete ".."' do
-      FileUtils.cd File.dirname(@tmpdir) do
+      FileUtils.cd @tmpdir do
         @params = ['..', '*'].disorder
         stdout, stderr = rm('-v', *@params)
-        stderr.gets.should == "rm: \".\" and \"..\" may not be removed"
-        @files.each {|f| stdout.gets.should == "#{f}\n" }
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
+        @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
         @files.each {|f| f.should_not be_existed }
       end
     end
 
     it 'should reject to delete "." and ".."' do
-      FileUtils.cd File.dirname(@tmpdir) do
+      FileUtils.cd @tmpdir do
         @params = ['.', '..', '*'].disorder
         stdout, stderr = rm('-v', *@params)
-        stderr.gets.should == "rm: \".\" and \"..\" may not be removed"
-        @files.each {|f| stdout.gets.should == "#{f}\n" }
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
+        @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
         @files.each {|f| f.should_not be_existed }
       end
     end
 
     it 'shouldn\'t ask for delete "." or ".."' do
-      FileUtils.cd File.dirname(@tmpdir) do
+      FileUtils.cd @tmpdir do
         @params = ['.', '..', '*'].disorder
-        stdout, stderr = rm('-iv', *@params)
-        stderr.gets.should == "rm: \".\" and \"..\" may not be removed"
+        stdin, stdout, stderr = rm_i('-v', *@params)
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
         @files.each {|f|
-          stderr.gets('? ').should == "remove #{f}? "
+          stderr.gets(63.chr + 32.chr).should == "remove #{File.basename(f)}? "
+          stderr.should be_eof
           stdin.puts 'y'
-          stdout.gets.should == "#{f}\n"
+          stdout.gets.should == "#{File.basename(f)}\n"
         }
         @files.each {|f| f.should_not be_existed }
       end

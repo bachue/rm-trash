@@ -1,3 +1,19 @@
+def warn_if_any_current_or_parent_directory(paths)
+  result = []
+  err = false
+  paths.each do |path|
+    subpaths = path.split('/').map(&:strip).reject(&:empty?)
+    next if subpaths.empty?
+    if ['.', '..'].include?(subpaths.last)
+      error path, :current_or_parent_dir unless err
+      err = true
+    else
+      result << path
+    end
+  end
+  result
+end
+
 def ask_for_remove(file)
   $stderr.print "remove #{file}? "
   yield if block_given? && $stdin.gets.downcase.strip.start_with?('y')
@@ -32,11 +48,12 @@ def assert_not_recursive(dir)
 end
 
 def error(file, err)
-  error = "rm: #{file}: " + {
-    :no_file => 'No such file or directory',
-    :not_dir => 'Not a directory',
-    :not_empty => 'Directory not empty',
-    :is_dir => 'is a directory'
+  error = 'rm: ' + {
+    :no_file => "#{file}: No such file or directory",
+    :not_dir => "#{file}: Not a directory",
+    :not_empty => "#{file}: Directory not empty",
+    :is_dir => "#{file}: is a directory",
+    :current_or_parent_dir => '"." and ".." may not be removed'
   }[err]
   $stderr.puts error
   $retval = 1
