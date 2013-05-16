@@ -8,6 +8,7 @@ require 'option_parser'
 require 'interaction'
 require 'array_tree_order'
 require 'string_color'
+require 'helper'
 
 $retval = 0
 
@@ -51,23 +52,29 @@ def ready_to_rm abs_file, origin
   files_to_rm, deleted_file_list = [], []
   if File.directory?(abs_file)
     if rm_r?
-      files_to_rm << abs_file
-      if File.symlink? origin
-        deleted_file_list << origin
-      else
-        deleted_file_list.concat Dir[origin + '{/**/**,}'].tree_order
+      check_permission_recursively abs_file, origin do |absfile, orifile|
+        files_to_rm << absfile
+        if File.symlink? orifile
+          deleted_file_list << orifile
+        else
+          deleted_file_list.concat Dir[orifile + '{/**/**,}'].tree_order
+        end
       end
     elsif rm_d?
       assert_not_recursive origin do
-        files_to_rm << abs_file
-        deleted_file_list << origin
+        check_permission_recursively abs_files, origin do |absfile, orifile|
+          files_to_rm << absfile
+          deleted_file_list << orifile
+        end
       end
     else
       error origin, :is_dir
     end
   else
-    files_to_rm << abs_file
-    deleted_file_list << origin
+    check_permission_recursively abs_files, origin do |absfile, orifile|
+      files_to_rm << absfile
+      deleted_file_list << orifile
+    end
   end
   [files_to_rm, deleted_file_list]
 end
@@ -121,6 +128,34 @@ def do_rm_with_confirmation _, origin_files
         end
       end
     end
+  end
+end
+
+def check_permission_recursively abs_file, origin_file
+  assert_same_size Dir[abs_file + '{/**/**,}'].tree_order,
+                   Dir[origin_file + '{/**/**,}'].tree_order do |abs_files, origin_files|
+    list = abs_files.zip(origin_files).each {|arr| arr << 0 }
+    list.each_with_index { |(abs, ori, flag), idx|
+      if flag.nil?
+        ask_for_override ori do
+          list[(index..-1)].select {|lst| abs.start_with? lst[0] }.each {|lst| lst[2] = :cannot_delete }
+        end if File.deletable? abs
+      else
+        error ori, :not_empty
+      end
+    }
+    list.reject! { |_, _, flag| flag == :cannot_delete }.reverse!
+
+    trees = []
+    while list.first
+      root = list.first[0]
+      groups = list.group_by {|abs, ori, flag| abs.start_with? root }
+      trees << groups[true]
+      list = groups[false]
+    end
+    trees.each {|tree|
+      yield tree[0..1] if block_given?
+    }
   end
 end
 

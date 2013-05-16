@@ -3,6 +3,7 @@ require 'bundler'
 require 'bundler/setup'
 require 'fileutils'
 require 'tmpdir'
+require 'timeout'
 require 'open3'
 require 'highline/import'
 require 'set'
@@ -29,11 +30,20 @@ def rm_i *args
 end
 
 class IO # Auto remove all color here to make test easiler
-  alias_method :gets_without_strip_color, :gets
-  def gets *args
+  def gets_with_strip_color *args
     str = gets_without_strip_color(*args)
     str.strip_color unless str.nil?
   end
+
+  alias_method :gets_without_strip_color, :gets
+  alias_method :gets, :gets_with_strip_color
+
+  def gets_with_timeout *args
+    Timeout::timeout(0.5) { gets_without_timeout }
+  end
+
+  alias_method :gets_without_timeout, :gets
+  alias_method :gets, :gets_with_timeout
 end
 
 RSpec::Matchers.define :be_existed do

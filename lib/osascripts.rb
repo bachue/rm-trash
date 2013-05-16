@@ -25,7 +25,7 @@ def run cmd
     stdin, stdout, stderr = Open3.popen3 cmd
     if error = stderr.gets(nil)
       $retval = 1
-      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'").red
+      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
     end
     [stdin, stdout, stderr].each(&:close)
   end
