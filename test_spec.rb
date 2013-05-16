@@ -364,11 +364,10 @@ describe 'test `rm -i`' do
         stdin, stdout, stderr = rm_i('-v', *@params)
         stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
         @files.each {|f|
-          stderr.gets(63.chr + 32.chr).should == "remove #{File.basename(f)}? "
-          stderr.should be_eof
+          stderr.gets('? ').should == "remove #{File.basename(f)}? "
           stdin.puts 'y'
-          stdout.gets.should == "#{File.basename(f)}\n"
         }
+        @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
         @files.each {|f| f.should_not be_existed }
       end
     end
