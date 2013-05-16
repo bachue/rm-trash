@@ -13,7 +13,7 @@ $retval = 0
 
 ARGV << '--help' if ARGV.empty?
 
-def rm! files = []
+def main files = []
   files_to_rm, deleted_file_list = [], []
 
   files = warn_if_any_current_or_parent_directory(files)
@@ -42,7 +42,7 @@ def rm! files = []
     end
   end
 
-  do_rm! files_to_rm, deleted_file_list do |delete_file|
+  rm! files_to_rm, deleted_file_list do |delete_file|
     puts delete_file.bold if verbose?
   end
 end
@@ -72,16 +72,16 @@ def ready_to_rm abs_file, origin
   [files_to_rm, deleted_file_list]
 end
 
-def do_rm! files, origin_files, &blk
+def rm! files, origin_files, &blk
   return if files.empty?
-  if forcely?
-    do_rm_forcely! files, origin_files, &blk
-  else # if always_confirm?
+  if always_confirm?
     do_rm_with_confirmation files, origin_files, &blk
+  else # if forcely? or default?
+    do_rm! files, origin_files, &blk
   end
 end
 
-def do_rm_forcely! files, origin_files
+def do_rm! files, origin_files
   rm_all! files
   origin_files.each {|f| yield f } if block_given?
 end
@@ -126,7 +126,7 @@ end
 
 do_error_handling do
   parse_options
-  rm! ARGV
+  main ARGV
 end
 
 exit $retval

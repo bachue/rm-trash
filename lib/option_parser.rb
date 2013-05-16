@@ -1,5 +1,5 @@
 def parse_options!
-  options = {}
+  options = { :confirmation => :default }
   OptionParser.new do |opts|
     opts.on('-v', 'Be verbose when deleting files, showing them as they are removed.') do
       options[:verbose] = true
@@ -20,12 +20,12 @@ def parse_options!
     opts.on('-i', 'Request confirmation before attempting to remove each file, regardless of the file\'s permissions, or ' <<
                   'whether or not the standard input device is a terminal.  The -i option overrides any previous -f ' <<
                   'options.') do
-      options[:confirmation] = true
+      options[:confirmation] = :always
     end
     opts.on('-f', 'Attempt to remove the files without prompting for confirmation, regardless of the file\'s permissions.  ' <<
                   'If the file does not exist, do not display a diagnostic message or modify the exit status to ' <<
                   'reflect an error.  The -f option overrides any previous -i options.') do
-      options[:force] = true
+      options[:confirmation] = :never
     end
   end.parse!
   options
@@ -37,11 +37,12 @@ end
 alias :parse_options :options
 
 def forcely?
-  !options[:confirmation] || options[:force]
+  options[:confirmation] == :never
 end
+alias :rm_f? :forcely?
 
 def always_confirm?
-  !forcely?
+  options[:confirmation] == :always
 end
 alias :rm_i? :always_confirm?
 
