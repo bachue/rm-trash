@@ -322,4 +322,54 @@ describe 'test `rm -i`' do
       @all_files.each {|f| f.should_not be_existed }
     end
   end
+
+  context 'won\'t allow user to delete "." or ".."' do
+    before(:each) do
+      create_files
+    end
+
+    it 'should reject to delete "."' do
+      FileUtils.cd File.dirname(@tmpdir) do
+        @params = ['.', '*'].disorder
+        stdout, stderr = rm('-v', *@params)
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
+        @files.each {|f| stdout.gets.should == "#{f}\n" }
+        @files.each {|f| f.should_not be_existed }
+      end
+    end
+
+    it 'should reject to delete ".."' do
+      FileUtils.cd File.dirname(@tmpdir) do
+        @params = ['..', '*'].disorder
+        stdout, stderr = rm('-v', *@params)
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed"
+        @files.each {|f| stdout.gets.should == "#{f}\n" }
+        @files.each {|f| f.should_not be_existed }
+      end
+    end
+
+    it 'should reject to delete "." and ".."' do
+      FileUtils.cd File.dirname(@tmpdir) do
+        @params = ['.', '..', '*'].disorder
+        stdout, stderr = rm('-v', *@params)
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed"
+        @files.each {|f| stdout.gets.should == "#{f}\n" }
+        @files.each {|f| f.should_not be_existed }
+      end
+    end
+
+    it 'shouldn\'t ask for delete "." or ".."' do
+      FileUtils.cd File.dirname(@tmpdir) do
+        @params = ['.', '..', '*'].disorder
+        stdout, stderr = rm('-iv', *@params)
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed"
+        @files.each {|f|
+          stderr.gets('? ').should == "remove #{f}? "
+          stdin.puts 'y'
+          stdout.gets.should == "#{f}\n"
+        }
+        @files.each {|f| f.should_not be_existed }
+      end
+    end
+  end
 end

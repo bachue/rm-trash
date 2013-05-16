@@ -12,17 +12,17 @@ ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
 Bundler.require :test
 HighLine.color_scheme = HighLine::SampleColorScheme.new
 
+RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
+
 def rm *args
-  rm = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
-  stdin, stdout, stderr = Open3.popen3 [rm, *args].join(' ')
+  stdin, stdout, stderr = Open3.popen3 [RM, *args].join(' ')
   stdin.close
   @io.concat [stdout, stderr]
   [stdout, stderr]
 end
 
 def rm_i *args
-  rm = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
-  stdin, stdout, stderr = Open3.popen3 [rm, '-i', *args].join(' ')
+  stdin, stdout, stderr = Open3.popen3 [RM, '-i', *args].join(' ')
   @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]
 end
