@@ -36,8 +36,9 @@ def rm! files = []
     end
   end
 
-  deleted_file_list = do_rm! files_to_rm, deleted_file_list
-  deleted_file_list.each {|file| puts file} if verbose?
+  do_rm! files_to_rm, deleted_file_list do |delete_file|
+    puts delete_file if verbose?
+  end
 end
 
 def ready_to_rm abs_file, origin
@@ -65,22 +66,21 @@ def ready_to_rm abs_file, origin
   [files_to_rm, deleted_file_list]
 end
 
-def do_rm! files, origin_files
+def do_rm! files, origin_files, &blk
   return if files.empty?
   if forcely?
-    do_rm_forcely! files, origin_files
+    do_rm_forcely! files, origin_files, &blk
   else # if always_confirm?
-    do_rm_with_confirmation files, origin_files
+    do_rm_with_confirmation files, origin_files, &blk
   end
 end
 
 def do_rm_forcely! files, origin_files
   rm_all! files
-  origin_files
+  origin_files.each {|f| yield f } if block_given?
 end
 
 def do_rm_with_confirmation _, origin_files
-  deleted_files = []
   do_error_handling do
     files_to_confirm = []
     if rm_r?
@@ -99,7 +99,7 @@ def do_rm_with_confirmation _, origin_files
         else
           ask_for_remove origin_file do
             rm_one! abs_file
-            deleted_files << origin_file
+            yield origin_file if block_given?
           end
         end
       }
@@ -111,12 +111,11 @@ def do_rm_with_confirmation _, origin_files
       ask_for_remove origin_file do
         assert_not_recursive origin_file do
           rm_one! File.expand_path(origin_file)
-          deleted_files << origin_file
+          yield origin_file if block_given?
         end
       end
     end
   end
-  deleted_files
 end
 
 do_error_handling do
