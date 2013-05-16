@@ -149,7 +149,7 @@ describe 'to delete symbolic links' do
 
     it 'can follow a symbolic link if the path is end with "/"' do
       @params = @links_to_dirs.map {|f| f + '/'}
-      @output_files = @params.map {|f| Dir[f + '/**/**'] }.flatten
+      @output_files = @params.map {|f| Dir[f + '{/**/**,}'] }.flatten
       stdout, stderr = rm('-vr', *@params)
       stderr.gets.should be_nil
       @output_files.each {|f| stdout.gets.should == "#{f}\n" }
