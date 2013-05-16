@@ -45,7 +45,11 @@ def ready_to_rm abs_file, origin
   if File.directory?(abs_file)
     if rm_r?
       files_to_rm << abs_file
-      deleted_file_list.concat Dir[origin + '{/**/**,}'].tree_order
+      if File.symlink? origin
+        deleted_file_list << origin
+      else
+        deleted_file_list.concat Dir[origin + '{/**/**,}'].tree_order
+      end
     elsif rm_d?
       assert_not_recursive origin do
         files_to_rm << abs_file
