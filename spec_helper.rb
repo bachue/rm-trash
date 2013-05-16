@@ -41,7 +41,7 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do
-    # FileUtils.rm_rf @tmpdirs.to_a
+    FileUtils.rm_rf @tmpdirs.to_a
     @io.each(&:close)
   end
 end

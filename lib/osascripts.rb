@@ -26,8 +26,6 @@ def run cmd
       $retval = 1
       $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
     end
-    stdin.close
-    stdout.close
-    stderr.close
+    [stdin, stdout, stderr].each(&:close)
   end
 end
