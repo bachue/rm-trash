@@ -15,11 +15,9 @@ HighLine.color_scheme = HighLine::SampleColorScheme.new
 def rm *args
   rm = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
   stdin, stdout, stderr = Open3.popen3 [rm, *args].join(' ')
-  [stdout.gets(nil), stderr.gets(nil)].tap {
-    stdin.close
-    stdout.close
-    stderr.close
-  }
+  stdin.close
+  @io.concat [stdout, stderr]
+  [stdout, stderr]
 end
 
 def rm_i *args
