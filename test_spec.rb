@@ -420,5 +420,13 @@ describe 'test `rm -f`' do
       @all_files.each {|f| stdout.gets.should == "#{f}\n" }
       @all_files.each {|f| f.should_not be_existed }
     end
+
+    it 'shouldn\'t ask you with `rm -f`' do
+      unexisted_files = (@all_files_without_permission + [@subdir]).map {|f| f + '_' }
+      stdin, stdout, stderr = rm('-vrf', *([@dir] + unexisted_files))
+      stderr.gets.should be_nil
+      @all_files.each {|f| stdout.gets.should == "#{f}\n" }
+      @all_files.each {|f| f.should_not be_existed }
+    end
   end
 end
