@@ -7,39 +7,23 @@ require 'timeout'
 require 'open3'
 require 'highline/import'
 require 'set'
-require 'string_color'
 
 ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
 
 Bundler.require :test
 HighLine.color_scheme = HighLine::SampleColorScheme.new
 
-RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb')
+RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb --no-color')
 
 def rm *args
   stdin, stdout, stderr = Open3.popen3 [RM, *args].join(' ')
-  stdin.close
-  @io.concat [stdout, stderr]
-  [stdout, stderr]
-end
-
-def rm_i *args
-  stdin, stdout, stderr = Open3.popen3 [RM, '-i', *args].join(' ')
   @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]
 end
 
-class IO # Auto remove all color here to make test easiler
-  def gets_with_strip_color *args
-    str = gets_without_strip_color(*args)
-    str.strip_color unless str.nil?
-  end
-
-  alias_method :gets_without_strip_color, :gets
-  alias_method :gets, :gets_with_strip_color
-
+class IO
   def gets_with_timeout *args
-    Timeout::timeout(0.5) { gets_without_timeout }
+    Timeout::timeout(0.5) { gets_without_timeout(*args) }
   end
 
   alias_method :gets_without_timeout, :gets
@@ -180,4 +164,25 @@ def create_ring_symbolic_links root = @tmpdir
   @ring_links.each_with_index { |f, i|
     FileUtils.ln_sf f, @ring_links[i + 1] || @ring_links[0]
   }
+end
+
+def create_hierarchical_dirs_without_write_permission root = @tmpdir
+  @tmpdirs << root
+  @dir = "#{root}/dir"
+  FileUtils.mkdir @dir
+  @all_files_without_permission = (1..2).map {|i|
+    file = "#{@dir}/#{i}"
+    FileUtils.touch file
+    File.chmod 0444, file
+    file
+  }
+  dir2 = "#{@dir}/dir"
+  FileUtils.mkdir dir2
+  @all_files_without_permission += (1..2).map { |i|
+    file = "#{dir2}/#{i}"
+    FileUtils.touch file
+    File.chmod 0444, file
+    file
+  }
+  @all_files = @all_files_without_permission + [dir2, @dir]
 end

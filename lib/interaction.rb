@@ -24,7 +24,7 @@ end
 
 def ask_for_examine(dir)
   ask "examine files in directory #{dir}? "
-  yield if block_given? && $stdin.gets.downcase.strip.start_with?('y')
+  yield $stdin.gets.downcase.strip.start_with?('y') if block_given?
 end
 
 def ask_for_override(file)
@@ -52,7 +52,7 @@ def do_if_not_dir(dir)
 end
 
 def assert_not_recursive(dir)
-  if !File.directory?(dir) || Dir[dir + '/*'].empty?
+  if !File.directory?(dir) || Dir.empty?(dir)
     yield if block_given?
   else
     error dir, :not_empty

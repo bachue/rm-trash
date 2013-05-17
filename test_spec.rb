@@ -2,6 +2,7 @@ $: << File.expand_path(File.dirname(__FILE__))
 $: << File.expand_path(File.dirname(__FILE__) + '/lib')
 require 'spec_helper'
 require 'array_tree_order'
+require 'helper'
 
 describe 'test `rm`' do
   before(:each) do
@@ -10,7 +11,7 @@ describe 'test `rm`' do
   end
 
   it 'should delete all files' do
-    stdout, stderr = rm(*@files)
+    _, stdout, stderr = rm(*@files)
     stdout.gets.should be_nil
     stderr.gets.should be_nil
     @files.each {|f| f.should_not be_existed }
@@ -19,7 +20,7 @@ describe 'test `rm`' do
   it 'should skip not existed files' do
     @not_existed_files = @files.map {|f| f + '_' }
     @all_files = @files + @not_existed_files
-    stdout, stderr = rm(*@all_files)
+    _, stdout, stderr = rm(*@all_files)
     stdout.gets.should be_nil
     @not_existed_files.each {|f| stderr.gets.should == "rm: #{f}: No such file or directory\n" }
     @files.each {|f| f.should_not be_existed }
@@ -28,7 +29,7 @@ describe 'test `rm`' do
   it 'should add -d if try to rm a directory' do
     @dirs = @empty_dirs.disorder
     @all_files = (@files + @dirs).disorder
-    stdout, stderr = rm(*@all_files)
+    _, stdout, stderr = rm(*@all_files)
     stdout.gets.should be_nil
     stderr = stderr.gets nil
     @dirs.each {|f| stderr.should =~ /rm: #{f}: is a directory\n/ }
@@ -43,7 +44,7 @@ describe 'test `rm -v`' do
   end
 
   it 'should delete all files' do
-    stdout, stderr = rm('-v', *@files)
+    _, stdout, stderr = rm('-v', *@files)
     @files.each {|f| stdout.gets.should == "#{f}\n" }
     stderr.gets.should be_nil
     @files.each {|f| f.should_not be_existed }
@@ -52,7 +53,7 @@ describe 'test `rm -v`' do
   it 'should skip not existed files' do
     @not_existed_files = @files.map {|f| f + '_' }
     @all_files = (@files + @not_existed_files).disorder
-    stdout, stderr = rm('-v', *@all_files)
+    _, stdout, stderr = rm('-v', *@all_files)
     stdout = stdout.gets nil
     stderr = stderr.gets nil
     @files.each {|f| stdout.should =~ /#{f}\n/ }
@@ -70,7 +71,7 @@ describe 'test `rm -d`' do
 
   it 'can rm empty directories' do
     @all_files = (@files + @empty_dirs).disorder
-    stdout, stderr = rm('-d', *@all_files)
+    _, stdout, stderr = rm('-d', *@all_files)
     stdout.gets.should be_nil
     stderr.gets.should be_nil
     @all_files.each {|f| f.should_not be_existed }
@@ -79,7 +80,7 @@ describe 'test `rm -d`' do
   it 'can\'t rm a directory which is not empty ever add -d' do
     @enable_to_delete = (@files + @empty_dirs).disorder
     @all_files = (@enable_to_delete + @non_empty_dirs).disorder
-    stdout, stderr = rm('-d', *@all_files)
+    _, stdout, stderr = rm('-d', *@all_files)
     stdout.gets.should be_nil
     stderr = stderr.gets nil
     @non_empty_dirs.each {|f| stderr.should =~ /rm: #{f}: Directory not empty\n/ }
@@ -95,7 +96,7 @@ describe 'test `rm -r`' do
 
   it 'can rm all files in a directory' do
     @all_files = @hierachical_files.disorder
-    stdout, stderr = rm('-r', @all_files)
+    _, stdout, stderr = rm('-r', @all_files)
     stdout.gets.should be_nil
     stderr.gets.should be_nil
     @all_files.each {|f| f.should_not be_existed }
@@ -103,7 +104,7 @@ describe 'test `rm -r`' do
 
   it 'can print each files\' paths when rm all files in a directory' do
     @all_files = @hierachical_files.disorder
-    stdout, stderr = rm('-rv', @all_files)
+    _, stdout, stderr = rm('-rv', @all_files)
     stderr.gets.should be_nil
     @all_files_in_hierachical_files.each {|f| stdout =~ /#{f}\n/ }
     @all_files.each {|f| f.should_not be_existed }
@@ -117,7 +118,7 @@ describe 'to delete symbolic links' do
     end
 
     it 'can rm a symbolic link if the path isn\'t end with "/"' do
-      stdout, stderr = rm('-v', *@links_to_files)
+      _, stdout, stderr = rm('-v', *@links_to_files)
       stderr.gets.should be_nil
       @links_to_files.each {|f| stdout.gets.should == "#{f}\n" }
       @links_to_files.each {|f| f.should_not be_existed }
@@ -126,7 +127,7 @@ describe 'to delete symbolic links' do
 
     it 'can follow a symbolic link if the path is end with "/"' do
       @params = @links_to_files.map {|f| f + '/'}
-      stdout, stderr = rm('-v', *@params)
+      _, stdout, stderr = rm('-v', *@params)
       stderr.gets.should be_nil
       @params.each {|f| stdout.gets.should == "#{f}\n" }
       @links_to_files.each {|f| f.should be_existed }
@@ -140,7 +141,7 @@ describe 'to delete symbolic links' do
     end
 
     it 'can rm a symbolic link if the path isn\'t end with "/"' do
-      stdout, stderr = rm('-vr', *@links_to_dirs)
+      _, stdout, stderr = rm('-vr', *@links_to_dirs)
       stderr.gets.should be_nil
       @links_to_dirs.each {|f| stdout.gets.should == "#{f}\n" }
       @links_to_dirs.each {|f| f.should_not be_existed }
@@ -149,8 +150,8 @@ describe 'to delete symbolic links' do
 
     it 'can follow a symbolic link if the path is end with "/"' do
       @params = @links_to_dirs.map {|f| f + '/'}
-      @output_files = @params.map {|f| Dir[f + '{/**/**,}'] }.flatten
-      stdout, stderr = rm('-vr', *@params)
+      @output_files = @params.map {|f| Dir.tree(f) }.flatten
+      _, stdout, stderr = rm('-vr', *@params)
       stderr.gets.should be_nil
       @output_files.each {|f| stdout.gets.should == "#{f}\n" }
       @links_to_dirs.each {|f| f.should be_existed }
@@ -164,7 +165,7 @@ describe 'to delete symbolic links' do
     end
 
     it 'can rm a broken symbolic link if the path isn\'t end with "/"' do
-      stdout, stderr = rm('-v', *@broken_links)
+      _, stdout, stderr = rm('-v', *@broken_links)
       stderr.gets.should be_nil
       @broken_links.each {|f| stdout.gets.should == "#{f}\n" }
       @broken_links.each {|f| f.should_not be_existed }
@@ -172,7 +173,7 @@ describe 'to delete symbolic links' do
 
     it 'can\'t find target file if the path isn\'t end with "/"' do
       @params = @broken_links.map {|f| f + '/'}
-      stdout, stderr = rm('-v', *@params)
+      _, stdout, stderr = rm('-v', *@params)
       stdout.gets.should be_nil
       @params.each {|f| stderr.gets.should == "rm: #{f}: No such file or directory\n"}
       @broken_links.each {|f| f.should be_existed }
@@ -185,7 +186,7 @@ describe 'to delete symbolic links' do
     end
 
     it 'can rm a broken symbolic link if the path isn\'t end with "/"' do
-      stdout, stderr = rm('-v', @ring_links.last)
+      _, stdout, stderr = rm('-v', @ring_links.last)
       stdout.gets.should == @ring_links.last + "\n"
       stderr.gets.should be_nil
       @ring_links.pop.should_not be_existed
@@ -193,7 +194,7 @@ describe 'to delete symbolic links' do
     end
 
     it 'can\'t find target file if the path isn\'t end with "/"' do
-      stdout, stderr = rm('-v', @ring_links.first + '/')
+      _, stdout, stderr = rm('-v', @ring_links.first + '/')
       stdout.gets.should == @ring_links.first + "/\n"
       stderr.gets.should be_nil
       @ring_links.pop.should_not be_existed
@@ -210,7 +211,7 @@ describe 'test `rm -i`' do
     end
 
     it 'should delete all files' do
-      stdin, stdout, stderr = rm_i('-v', *@files)
+      stdin, stdout, stderr = rm('-iv', *@files)
       @files.each {|f|
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'y'
@@ -222,7 +223,7 @@ describe 'test `rm -i`' do
     it 'should skip not existed files' do
       @not_existed_files = @files.map {|f| f + '_' }
       @all_files = @files + @not_existed_files
-      stdin, stdout, stderr = rm_i('-iv', *@all_files)
+      stdin, stdout, stderr = rm('-iv', *@all_files)
       @not_existed_files.each {|f| stderr.gets.should == "rm: #{f}: No such file or directory\n" }
 
       @files.each {|f|
@@ -235,7 +236,7 @@ describe 'test `rm -i`' do
 
     it 'should add -d if try to rm a directory' do
       @all_files = @files + @empty_dirs
-      stdin, stdout, stderr = rm_i('-v', *@all_files)
+      stdin, stdout, stderr = rm('-iv', *@all_files)
       @empty_dirs.each {|f| stderr.gets.should == "rm: #{f}: is a directory\n" }
 
       @files.each {|f|
@@ -257,7 +258,7 @@ describe 'test `rm -i`' do
 
     it 'should rm empty directories' do
       @all_files = @empty_dirs + @files
-      stdin, stdout, stderr = rm_i('-vd', *@all_files)
+      stdin, stdout, stderr = rm('-ivd', *@all_files)
       @all_files.each { |f|
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'y'
@@ -268,7 +269,7 @@ describe 'test `rm -i`' do
 
     it 'shouldn\'t rm anything without confirmation' do
       @all_files = @empty_dirs + @files
-      stdin, stdout, stderr = rm_i('-vd', *@all_files)
+      stdin, stdout, stderr = rm('-ivd', *@all_files)
       @all_files.each { |f|
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'n'
@@ -280,7 +281,7 @@ describe 'test `rm -i`' do
     it 'can\'t rm a directory which is not empty ever add -d' do
       @enable_to_delete = @empty_dirs + @files
       @all_files = @enable_to_delete + @non_empty_dirs
-      stdin, stdout, stderr = rm_i('-vd', *@all_files)
+      stdin, stdout, stderr = rm('-ivd', *@all_files)
       @non_empty_dirs.each {|f| stderr.gets.should == "rm: #{f}: Directory not empty\n" }
       @enable_to_delete.each { |f|
         stderr.gets('? ').should == "remove #{f}? "
@@ -300,7 +301,7 @@ describe 'test `rm -i`' do
     it 'can rm all files in a directory with confirmation' do
       @all_files = @hierachical_files
       @deleted_files = []
-      stdin, stdout, stderr = rm_i('-rv', @all_files)
+      stdin, stdout, stderr = rm('-irv', @all_files)
       @all_files_in_hierachical_files.tree_order(true).each {|f|
         stderr.gets('? ').should == if File.directory? f
           "examine files in directory #{f}? "
@@ -331,7 +332,7 @@ describe 'test `rm -i`' do
     it 'should reject to delete "."' do
       FileUtils.cd @tmpdir do
         @params = ['.', '*'].disorder
-        stdout, stderr = rm('-v', *@params)
+        _, stdout, stderr = rm('-v', *@params)
         stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
         @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
         @files.each {|f| f.should_not be_existed }
@@ -341,7 +342,7 @@ describe 'test `rm -i`' do
     it 'should reject to delete ".."' do
       FileUtils.cd @tmpdir do
         @params = ['..', '*'].disorder
-        stdout, stderr = rm('-v', *@params)
+        _, stdout, stderr = rm('-v', *@params)
         stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
         @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
         @files.each {|f| f.should_not be_existed }
@@ -351,7 +352,7 @@ describe 'test `rm -i`' do
     it 'should reject to delete "." and ".."' do
       FileUtils.cd @tmpdir do
         @params = ['.', '..', '*'].disorder
-        stdout, stderr = rm('-v', *@params)
+        _, stdout, stderr = rm('-v', *@params)
         stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
         @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
         @files.each {|f| f.should_not be_existed }
@@ -361,7 +362,7 @@ describe 'test `rm -i`' do
     it 'shouldn\'t ask for delete "." or ".."' do
       FileUtils.cd @tmpdir do
         @params = ['.', '..', '*'].disorder
-        stdin, stdout, stderr = rm_i('-v', *@params)
+        stdin, stdout, stderr = rm('-iv', *@params)
         stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
         @files.each {|f|
           stderr.gets('? ').should == "remove #{File.basename(f)}? "
@@ -370,6 +371,27 @@ describe 'test `rm -i`' do
         @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
         @files.each {|f| f.should_not be_existed }
       end
+    end
+  end
+end
+
+describe 'test `rm -f`' do
+  context 'to delete files without permission and -f' do
+    before(:each) do
+      create_hierarchical_dirs_without_write_permission
+    end
+
+    it 'should ask for your confirmation' do
+      stdin, stdout, stderr = rm('-vr', @dir)
+      @all_files_without_permission.each {|f|
+        err = stderr.gets('? ')
+        err.should start_with("override r--r--r--")
+        err.should end_with("#{f}? ")
+        stdin.puts 'y'
+      }
+      stderr.gets nil
+      @all_files.each {|f| stdout.gets.should == "#{f}\n" }
+      @all_files.each {|f| f.should_not be_existed }
     end
   end
 end

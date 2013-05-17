@@ -1,3 +1,5 @@
+require 'string_color'
+
 def parse_options!
   options = { :confirmation => :default }
   OptionParser.new do |opts|
@@ -26,6 +28,12 @@ def parse_options!
                   'If the file does not exist, do not display a diagnostic message or modify the exit status to ' <<
                   'reflect an error.  The -f option overrides any previous -i options.') do
       options[:confirmation] = :never
+    end
+    opts.on('--color', '--colour', 'Colorful output') do
+      String.colorful = true
+    end
+    opts.on('--no-color', '--no-colour', 'White output') do
+      String.colorful = false
     end
   end.parse!
   options

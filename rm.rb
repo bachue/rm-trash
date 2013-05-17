@@ -57,7 +57,7 @@ def ready_to_rm abs_file, origin
         if File.symlink? orifile
           deleted_file_list << orifile
         else
-          deleted_file_list.concat Dir[orifile + '{/**/**,}'].tree_order
+          deleted_file_list.concat Dir.tree(orifile).tree_order
         end
       end
     elsif rm_d?
@@ -132,14 +132,14 @@ def do_rm_with_confirmation _, origin_files
 end
 
 def check_permission_recursively abs_file, origin_file
-  assert_same_size Dir[abs_file + '{/**/**,}'].tree_order,
-                   Dir[origin_file + '{/**/**,}'].tree_order do |abs_files, origin_files|
+  assert_same_size Dir.tree(abs_file).tree_order,
+                   Dir.tree(origin_file).tree_order do |abs_files, origin_files|
     list = abs_files.zip(origin_files).each {|arr| arr << nil }
     list.each_with_index { |(abs, ori, flag), idx|
       if flag.nil?
         ask_for_override ori do
           list[(idx..-1)].select {|lst| abs.start_with? lst[0] }.each {|lst| lst[2] = :cannot_delete }
-        end unless File.writable? abs
+        end unless !File.exists?(abs) || File.writable?(abs)
       else
         error ori, :not_empty
       end

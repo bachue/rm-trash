@@ -1,4 +1,9 @@
 class String
+  class << self
+    attr_accessor :colorful
+  end
+  colorful = true
+
   COLORS =
   {
     "black"   => 0,
@@ -14,19 +19,27 @@ class String
 
   COLORS.each_pair do |color, value|
     define_method(color) do
-      "\033[0;#{30+value}m#{self}\033[0m"
+      if String.colorful
+        "\033[0;#{30+value}m#{self}\033[0m"
+      else
+        self
+      end
     end
 
     define_method("bright_#{color}") do
-      "\033[1;#{30+value}m#{self}\033[0m"
+      if String.colorful
+        "\033[1;#{30+value}m#{self}\033[0m"
+      else
+        self
+      end
     end
   end
 
   def bold
-    "\e[1m#{self}\e[0m"
-  end
-
-  def strip_color
-    gsub(/\e\[.*?(\d)+m/ , '')
+    if String.colorful
+      "\e[1m#{self}\e[0m"
+    else
+      self
+    end
   end
 end
