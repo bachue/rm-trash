@@ -1,3 +1,4 @@
+require 'option_parser'
 require 'string_color'
 require 'helper'
 
@@ -8,7 +9,10 @@ def warn_if_any_current_or_parent_directory(paths)
     subpaths = path.split('/').map(&:strip).reject(&:empty?)
     next if subpaths.empty?
     if ['.', '..'].include?(subpaths.last)
-      error path, :current_or_parent_dir unless err
+      unless err
+        $stderr.puts 'rm: "." and ".." may not be removed'
+        $retval = 1
+      end
       err = true
     else
       result << path
@@ -69,12 +73,12 @@ def assert_same_size(array1, array2)
 end
 
 def error(file, err)
+  return if rm_f?
   error = 'rm: ' + {
     :no_file => "#{file}: No such file or directory",
     :not_dir => "#{file}: Not a directory",
     :not_empty => "#{file}: Directory not empty",
-    :is_dir => "#{file}: is a directory",
-    :current_or_parent_dir => '"." and ".." may not be removed'
+    :is_dir => "#{file}: is a directory"
   }[err]
   $stderr.puts error.red
   $retval = 1
