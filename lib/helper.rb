@@ -1,4 +1,5 @@
 require 'etc'
+require 'pathname'
 
 class << File
   def mode filename
@@ -31,5 +32,31 @@ class << Dir
 
   def tree(filename)
     glob("#{filename}/**/**") + [filename]
+  end
+end
+
+class Pathname
+  def filenames
+    filenames = []
+    each_filename {|filename| filenames << filename }
+    filenames
+  end
+
+  def ascend_tree(include_self = true)
+    descendants = Dir["#{to_s}/**/**"]
+    descendants.unshift to_s if include_self
+    descendants
+  end
+
+  def descend_tree(include_self = true)
+    descendants = Dir["#{to_s}/**/**"].sort { |f1, f2|
+      case
+      when f1.start_with?(f2); -1
+      when f2.start_with?(f1); 1
+      else f1 <=> f2
+      end
+    }
+    descendants << to_s if include_self
+    descendants
   end
 end
