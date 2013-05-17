@@ -1,12 +1,8 @@
 require 'etc'
 
 class << File
-  def deletable? filename
-    writable? dirname(filename)
-  end
-
   def mode filename
-    stat(filename).mode.to_s(8)[2..-1].split('').map(&:to_i).map {|permission|
+    stat(filename).mode.to_s(8).split('').last(3).map(&:to_i).map {|permission|
       r = permission & 4 == 0 ? '-' : 'r'
       w = permission & 2 == 0 ? '-' : 'w'
       x = permission & 1 == 0 ? '-' : 'x'

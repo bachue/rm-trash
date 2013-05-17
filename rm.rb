@@ -62,7 +62,7 @@ def ready_to_rm abs_file, origin
       end
     elsif rm_d?
       assert_not_recursive origin do
-        check_permission_recursively abs_files, origin do |absfile, orifile|
+        check_permission_recursively abs_file, origin do |absfile, orifile|
           files_to_rm << absfile
           deleted_file_list << orifile
         end
@@ -71,7 +71,7 @@ def ready_to_rm abs_file, origin
       error origin, :is_dir
     end
   else
-    check_permission_recursively abs_files, origin do |absfile, orifile|
+    check_permission_recursively abs_file, origin do |absfile, orifile|
       files_to_rm << absfile
       deleted_file_list << orifile
     end
@@ -134,27 +134,28 @@ end
 def check_permission_recursively abs_file, origin_file
   assert_same_size Dir[abs_file + '{/**/**,}'].tree_order,
                    Dir[origin_file + '{/**/**,}'].tree_order do |abs_files, origin_files|
-    list = abs_files.zip(origin_files).each {|arr| arr << 0 }
+    list = abs_files.zip(origin_files).each {|arr| arr << nil }
     list.each_with_index { |(abs, ori, flag), idx|
       if flag.nil?
         ask_for_override ori do
-          list[(index..-1)].select {|lst| abs.start_with? lst[0] }.each {|lst| lst[2] = :cannot_delete }
-        end if File.deletable? abs
+          list[(idx..-1)].select {|lst| abs.start_with? lst[0] }.each {|lst| lst[2] = :cannot_delete }
+        end unless File.writable? abs
       else
         error ori, :not_empty
       end
     }
-    list.reject! { |_, _, flag| flag == :cannot_delete }.reverse!
+    list.reject! { |_, _, flag| flag == :cannot_delete }
+    list.reverse!
 
     trees = []
-    while list.first
+    while list && list.size > 0
       root = list.first[0]
       groups = list.group_by {|abs, ori, flag| abs.start_with? root }
       trees << groups[true]
       list = groups[false]
     end
     trees.each {|tree|
-      yield tree[0..1] if block_given?
+      yield tree[0][0..1] if block_given?
     }
   end
 end

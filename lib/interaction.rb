@@ -18,18 +18,22 @@ def warn_if_any_current_or_parent_directory(paths)
 end
 
 def ask_for_remove(file)
-  $stderr.print "remove #{file}? ".bright_yellow
+  ask "remove #{file}? "
   yield if block_given? && $stdin.gets.downcase.strip.start_with?('y')
 end
 
 def ask_for_examine(dir)
-  $stderr.print "examine files in directory #{dir}? ".bright_yellow
-  yield $stdin.gets.downcase.strip.start_with?('y') if block_given?
+  ask "examine files in directory #{dir}? "
+  yield if block_given? && $stdin.gets.downcase.strip.start_with?('y')
 end
 
 def ask_for_override(file)
-  $stderr.print "override #{File.mode(file)} #{File.owner(file)}/#{File.gowner(file)} for #{file}?".bright_yellow
-  yield $stdin.gets.downcase.strip.start_with?('y') if block_given?
+  ask "override #{File.mode(file)} #{File.owner(file)}/#{File.gowner(file)} for #{file}? "
+  yield if block_given? && !$stdin.gets.downcase.strip.start_with?('y')
+end
+
+def ask(what)
+  $stderr.print what.bright_yellow
 end
 
 def assert_existed(file)
