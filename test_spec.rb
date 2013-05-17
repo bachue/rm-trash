@@ -393,5 +393,25 @@ describe 'test `rm -f`' do
       @all_files.each {|f| stdout.gets.should == "#{f}\n" }
       @all_files.each {|f| f.should_not be_existed }
     end
+
+    it 'shouldn\'t delete files without your permission' do
+      stdin, stdout, stderr = rm('-vr', @dir)
+      @all_files_without_permission.each {|f|
+        err = stderr.gets('? ')
+        err.should start_with("override r--r--r--")
+        err.should end_with("#{f}? ")
+        if File.basename(f) == '1'
+          stdin.puts 'y'
+        else
+          stdin.puts 'n'
+        end
+      }
+      stderr.gets.should == "rm: #{@subdir}: Directory not empty\n"
+      stderr.gets.should == "rm: #{@dir}: Directory not empty\n"
+      groups = @all_files_without_permission.group_by {|f| File.basename(f) == '1' }
+      groups[true].reverse.each {|f| stdout.gets.should == "#{f}\n" }
+      groups[true].each {|f| f.should_not be_existed }
+      groups[false].each {|f| f.should be_existed }
+    end
   end
 end

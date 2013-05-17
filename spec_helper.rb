@@ -23,7 +23,7 @@ end
 
 class IO
   def gets_with_timeout *args
-    Timeout::timeout(0.5) { gets_without_timeout(*args) }
+    Timeout::timeout(3) { gets_without_timeout(*args) }
   end
 
   alias_method :gets_without_timeout, :gets
@@ -176,13 +176,13 @@ def create_hierarchical_dirs_without_write_permission root = @tmpdir
     File.chmod 0444, file
     file
   }
-  dir2 = "#{@dir}/dir"
-  FileUtils.mkdir dir2
+  @subdir = "#{@dir}/dir"
+  FileUtils.mkdir @subdir
   @all_files_without_permission += (1..2).map { |i|
-    file = "#{dir2}/#{i}"
+    file = "#{@subdir}/#{i}"
     FileUtils.touch file
     File.chmod 0444, file
     file
   }
-  @all_files = @all_files_without_permission + [dir2, @dir]
+  @all_files = @all_files_without_permission + [@subdir, @dir]
 end
