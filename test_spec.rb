@@ -413,5 +413,12 @@ describe 'test `rm -f`' do
       groups[true].each {|f| f.should_not be_existed }
       groups[false].each {|f| f.should be_existed }
     end
+
+    it 'shouldn\'t ask you with `rm -f`' do
+      stdin, stdout, stderr = rm('-vrf', @dir)
+      stderr.gets.should be_nil
+      @all_files.each {|f| stdout.gets.should == "#{f}\n" }
+      @all_files.each {|f| f.should_not be_existed }
+    end
   end
 end

@@ -132,6 +132,8 @@ def do_rm_with_confirmation _, origin_files
 end
 
 def check_permission_recursively abs_file, origin_file
+  yield abs_file, origin_file and return if rm_f?
+
   assert_same_size Dir.tree(abs_file).tree_order,
                    Dir.tree(origin_file).tree_order do |abs_files, origin_files|
     list = abs_files.zip(origin_files).each {|arr| arr << nil }
