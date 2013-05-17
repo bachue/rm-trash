@@ -22,23 +22,21 @@ def main files = []
   files.each do |file|
     abs_file = File.expand_path(file)
 
-    catch :skip do
-      assert_existed file do
-        if file.end_with? '/'
-          if File.symlink? abs_file
-            abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
-          else
-            do_if_not_dir file do
-              throw :skip
-            end
+    if assert_existed? file
+      if file.end_with? '/'
+        if File.symlink? abs_file
+          abs_file = File.expand_path(File.readlink(abs_file.chomp('/')))
+        else
+          if assert_not_dir? file
+            next
           end
         end
+      end
 
-        assert_existed file do
-          _files_to_rm, _deleted_file_list = ready_to_rm abs_file, file
-          files_to_rm.concat _files_to_rm
-          deleted_file_list.concat _deleted_file_list
-        end
+      if assert_existed? file
+        _files_to_rm, _deleted_file_list = ready_to_rm abs_file, file
+        files_to_rm.concat _files_to_rm
+        deleted_file_list.concat _deleted_file_list
       end
     end
   end
@@ -61,7 +59,7 @@ def ready_to_rm abs_file, origin
         end
       end
     elsif rm_d?
-      assert_not_recursive origin do
+      if assert_not_recursive? origin
         check_permission_recursively abs_file, origin do |absfile, orifile|
           files_to_rm << absfile
           deleted_file_list << orifile
@@ -102,15 +100,13 @@ def do_rm_with_confirmation _, origin_files
         abs_file = File.expand_path origin_file
         next if abs_file.start_with? ignored_dir
         if File.directory? abs_file
-          ask_for_examine origin_file do |to_examine|
-            if to_examine
-              files_to_confirm << origin_file
-            else
-              ignored_dir = abs_file
-            end
+          if ask_for_examine? origin_file
+            files_to_confirm << origin_file
+          else
+            ignored_dir = abs_file
           end
         else
-          ask_for_remove origin_file do
+          if ask_for_remove? origin_file
             rm_one! abs_file
             yield origin_file if block_given?
           end
@@ -121,8 +117,8 @@ def do_rm_with_confirmation _, origin_files
     end
 
     files_to_confirm.tree_order.each do |origin_file|
-      ask_for_remove origin_file do
-        assert_not_recursive origin_file do
+      if ask_for_remove? origin_file
+        if assert_not_recursive? origin_file
           rm_one! File.expand_path(origin_file)
           yield origin_file if block_given?
         end
@@ -133,17 +129,19 @@ end
 
 def check_permission_recursively abs_file, origin_file
   yield abs_file, origin_file and return if rm_f?
-  assert_same_size Dir.tree(abs_file).tree_order,
-                   Dir.tree(origin_file).tree_order do |abs_files, origin_files|
+
+  abs_files = Dir.tree(abs_file).tree_order
+  origin_files = Dir.tree(origin_file).tree_order
+  if assert_same_size? abs_files, origin_files
     have_deleted = false
 
     list = abs_files.zip(origin_files).each {|arr| arr << nil }
     list.each_with_index { |(abs, ori, flag), idx|
       if flag.nil?
-        ask_for_override ori do
+        if File.exists?(abs) && !File.writable?(abs) && !ask_for_override?(ori)
           list[(idx..-1)].select {|lst| abs.start_with? lst[0] }.each {|lst| lst[2] = :cannot_delete }
           have_deleted = true
-        end unless !File.exists?(abs) || File.writable?(abs)
+        end
       else
         error ori, :not_empty
       end

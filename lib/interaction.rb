@@ -21,55 +21,53 @@ def warn_if_any_current_or_parent_directory(paths)
   result
 end
 
-def ask_for_remove(file)
+def ask_for_remove?(file)
   ask "remove #{file}? "
-  yield if block_given? && $stdin.gets.downcase.strip.start_with?('y')
+  $stdin.gets.downcase.strip.start_with?('y')
 end
 
-def ask_for_examine(dir)
+def ask_for_examine?(dir)
   ask "examine files in directory #{dir}? "
-  yield $stdin.gets.downcase.strip.start_with?('y') if block_given?
+  $stdin.gets.downcase.strip.start_with?('y')
 end
 
-def ask_for_override(file)
+def ask_for_override?(file)
   ask "override #{File.mode(file)} #{File.owner(file)}/#{File.gowner(file)} for #{file}? "
-  yield if block_given? && !$stdin.gets.downcase.strip.start_with?('y')
+  $stdin.gets.downcase.strip.start_with?('y')
 end
 
 def ask(what)
   $stderr.print what.bright_yellow
 end
 
-def assert_existed(file)
-  if File.exists?(file) || File.symlink?(file)
-    yield if block_given?
-  else
+def assert_existed?(file)
+  unless ret = File.exists?(file) || File.symlink?(file)
     error file, :no_file
   end
+  ret
 end
 
-def do_if_not_dir(dir)
-  unless File.directory?(dir)
+def assert_not_dir?(dir)
+  unless ret = File.directory?(dir)
     error dir, :not_dir
-    yield if block_given?
   end
+  ret
 end
 
-def assert_not_recursive(dir)
-  if !File.directory?(dir) || Dir.empty?(dir)
-    yield if block_given?
-  else
+def assert_not_recursive?(dir)
+  unless ret = !File.directory?(dir) || Dir.empty?(dir)
     error dir, :not_empty
   end
+  ret
 end
 
-def assert_same_size(array1, array2)
-  halt <<-MSG if array1.size != array2.size
+def assert_same_size?(array1, array2)
+  halt <<-MSG unless ret = array1.size == array2.size
 2 file lists aren't the same
 1: #{PP.pp(array1, '').strip }
 2: #{PP.pp(array2, '').strip }
   MSG
-  yield array1, array2 if block_given?
+  ret
 end
 
 def error(file, err)
