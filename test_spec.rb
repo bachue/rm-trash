@@ -1,8 +1,6 @@
 $: << File.expand_path(File.dirname(__FILE__))
 $: << File.expand_path(File.dirname(__FILE__) + '/lib')
 require 'spec_helper'
-require 'array_tree_order'
-require 'helper'
 
 describe 'test `rm`' do
   before(:each) do
@@ -150,7 +148,7 @@ describe 'to delete symbolic links' do
 
     it 'can follow a symbolic link if the path is end with "/"' do
       @params = @links_to_dirs.map {|f| f + '/'}
-      @output_files = @params.map {|f| Dir.tree(f) }.flatten
+      @output_files = @params.map {|f| Pathname(f).descend_tree }.flatten
       _, stdout, stderr = rm('-vr', *@params)
       stderr.gets.should be_nil
       @output_files.each {|f| stdout.gets.should == "#{f}\n" }
@@ -299,19 +297,14 @@ describe 'test `rm -i`' do
     end
 
     it 'can rm all files in a directory with confirmation' do
-      @all_files = @hierachical_files
+      @all_files = @hierachical_files.tree_order
       @deleted_files = []
       stdin, stdout, stderr = rm('-irv', @all_files)
-      @all_files_in_hierachical_files.tree_order(true).each {|f|
-        stderr.gets('? ').should == if File.directory? f
-          "examine files in directory #{f}? "
-        else
-          @deleted_files << f
-          "remove #{f}? "
-        end
+      @all_files_in_hierachical_files.select {|f| File.directory? f }.tree_order(true).each {|f|
+        stderr.gets('? ').should == "examine files in directory #{f}? "
         stdin.puts 'y'
       }
-      @all_files_in_hierachical_files.select {|f| File.directory? f }.tree_order.each {|f|
+      @all_files_in_hierachical_files.tree_order.each {|f|
         @deleted_files << f
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'y'

@@ -7,6 +7,9 @@ require 'timeout'
 require 'open3'
 require 'highline/import'
 require 'set'
+require 'array_tree_order'
+require 'pathname'
+require 'helper'
 
 ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
 

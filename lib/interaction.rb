@@ -2,7 +2,7 @@ require 'option_parser'
 require 'string_color'
 require 'helper'
 
-def warn_if_any_current_or_parent_directory(paths)
+def warn_if_any_current_or_parent_directory paths
   result = []
   err = false
   paths.each do |path|
@@ -21,56 +21,47 @@ def warn_if_any_current_or_parent_directory(paths)
   result
 end
 
-def ask_for_remove?(file)
+def ask_for_remove? file
   ask "remove #{file}? "
   $stdin.gets.downcase.strip.start_with?('y')
 end
 
-def ask_for_examine?(dir)
+def ask_for_examine? dir
   ask "examine files in directory #{dir}? "
   $stdin.gets.downcase.strip.start_with?('y')
 end
 
-def ask_for_override?(file)
-  ask "override #{File.mode(file)} #{File.owner(file)}/#{File.gowner(file)} for #{file}? "
+def ask_for_override? file
+  ask "override #{file.permissions} #{file.owner}/#{file.gowner} for #{file}? "
   $stdin.gets.downcase.strip.start_with?('y')
 end
 
-def ask(what)
+def ask what
   $stderr.print what.bright_yellow
 end
 
-def assert_existed?(file)
-  unless ret = File.exists?(file) || File.symlink?(file)
+def assert_existed? file
+  unless ret = file.follow_symlink? ? file.exists? : file.exists_or_symlink?
     error file, :no_file
   end
   ret
 end
 
-def assert_not_dir?(dir)
-  unless ret = File.directory?(dir)
+def assert_dir? dir
+  unless ret = dir.directory?
     error dir, :not_dir
   end
   ret
 end
 
-def assert_not_recursive?(dir)
-  unless ret = !File.directory?(dir) || Dir.empty?(dir)
+def assert_no_children? dir
+  if ret = dir.directory? && dir.has_children?
     error dir, :not_empty
   end
-  ret
+  !ret
 end
 
-def assert_same_size?(array1, array2)
-  halt <<-MSG unless ret = array1.size == array2.size
-2 file lists aren't the same
-1: #{PP.pp(array1, '').strip }
-2: #{PP.pp(array2, '').strip }
-  MSG
-  ret
-end
-
-def error(file, err)
+def error file, err
   return if rm_f?
   error = 'rm: ' + {
     :no_file => "#{file}: No such file or directory",

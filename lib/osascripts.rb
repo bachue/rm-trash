@@ -14,12 +14,6 @@ def rm_all! files
   CMD
 end
 
-# To call AppleScript to delete one file
-# file param must be absolute path
-def rm_one! file
-  run "osascript -e 'tell app \"Finder\" to delete POSIX file \"#{file}\"'"
-end
-
 def run cmd
   do_error_handling do
     stdin, stdout, stderr = Open3.popen3 cmd
