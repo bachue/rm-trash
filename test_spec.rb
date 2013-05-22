@@ -83,6 +83,14 @@ describe 'test `rm -d`' do
     @all_files.each {|f| f.should_not be_existed }
   end
 
+  it 'can rm empty directories which are end with "/"' do
+    @all_files = (@files + @empty_dirs.map {|f| f + '/'}).disorder
+    _, stdout, stderr = rm('-d', *@all_files)
+    stdout.gets.should be_nil
+    stderr.gets.should be_nil
+    @all_files.each {|f| f.should_not be_existed }
+  end
+
   it 'can\'t rm a directory which is not empty ever add -d' do
     @enable_to_delete = (@files + @empty_dirs).disorder
     @all_files = (@enable_to_delete + @non_empty_dirs).disorder
@@ -102,6 +110,14 @@ describe 'test `rm -r`' do
 
   it 'can rm all files in a directory' do
     @all_files = @hierachical_files.disorder
+    _, stdout, stderr = rm('-r', @all_files)
+    stdout.gets.should be_nil
+    stderr.gets.should be_nil
+    @all_files.each {|f| f.should_not be_existed }
+  end
+
+  it 'can rm all files in a directory which is end with "/"' do
+    @all_files = @hierachical_files.map {|f| File.directory?(f) ? f + '/' : f}.disorder
     _, stdout, stderr = rm('-r', @all_files)
     stdout.gets.should be_nil
     stderr.gets.should be_nil
