@@ -102,6 +102,13 @@ def create_non_empty_dirs root = @tmpdir
   }.flatten
 end
 
+def create_deep_directory_tree root = @tmpdir
+  @tmpdirs << root
+  dirs = ('a'..'c').to_a
+  FileUtils.mkdir_p root + '/' + dirs.join('/')
+  @tree_root = root + '/a'
+end
+
 def create_hierarchical_dirs root = @tmpdir
   @tmpdirs << root
   @hierachical_files, @all_files_in_hierachical_files = [], []

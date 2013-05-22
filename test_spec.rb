@@ -255,6 +255,29 @@ describe 'test `rm -i`' do
     end
   end
 
+  context 'to be rejected to delete file from a deep node' do
+    before(:each) do
+      create_deep_directory_tree
+    end
+    it 'should be rejected to delete all its parent nodes' do
+      FileUtils.cd @tmpdir do
+        stdin, stdout, stderr = rm('-ir', File.basename(@tree_root))
+        stderr.gets('? ').should == "examine files in directory a? "
+        stdin.puts 'y'
+        stderr.gets('? ').should == "examine files in directory a/b? "
+        stdin.puts 'y'
+        stderr.gets('? ').should == "examine files in directory a/b/c? "
+        stdin.puts 'n'
+        stderr.gets('? ').should == "remove a/b? "
+        stdin.puts 'y'
+        stderr.gets.should == "rm: a/b: Directory not empty\n"
+        stderr.gets('? ').should == "remove a? "
+        stdin.puts 'y'
+        stderr.gets.should == "rm: a: Directory not empty\n"
+      end
+    end
+  end
+
   context 'to delete empty directories with confirmation' do
     before(:each) do
       create_files
