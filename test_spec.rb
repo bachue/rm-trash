@@ -58,6 +58,14 @@ describe 'test `rm -v`' do
     @not_existed_files.each {|f| stderr.should =~ /rm: #{f}: No such file or directory\n/ }
     @files.each {|f| f.should_not be_existed }
   end
+
+  it 'cannot delete file if the parameter it end with "/"' do
+    @files_with_slash = @files.map {|f| f + '/' }
+    _, stdout, stderr = rm('-v', *@files_with_slash)
+    stdout.gets.should be_nil
+    @files_with_slash.each {|f| stderr.gets.should =~ /rm: #{f}: Not a directory\n/ }
+    @files.each {|f| f.should be_existed }
+  end
 end
 
 describe 'test `rm -d`' do
