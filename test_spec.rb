@@ -320,6 +320,21 @@ describe 'test `rm -i`' do
       @enable_to_delete.each {|f| f.should_not be_existed }
       @non_empty_dirs.each {|f| f.should be_existed }
     end
+
+    it 'should examine and then remove directories even it is empty' do
+      stdin, stdout, stderr = rm('-irv', @empty_dirs)
+      @empty_dirs.each {|f|
+        stderr.gets('? ').should == "examine files in directory #{f}? "
+        stdin.puts 'y'
+      }
+      @empty_dirs.each {|f|
+        stderr.gets('? ').should == "remove #{f}? "
+        stdin.puts 'y'
+      }
+      @empty_dirs.each {|f|
+        stdout.gets.should == "#{f}\n"
+      }
+    end
   end
 
   context 'to delete hierarchical directories with confirmation' do
