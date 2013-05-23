@@ -1,6 +1,7 @@
 require 'etc'
 require 'pathname'
 require 'array_tree_order'
+require 'alias_method_chain'
 
 class Pathname
   attr_accessor :flag # user defined flag
@@ -13,8 +14,7 @@ class Pathname
       exist_without_symlink_read?
     end
   end
-  alias_method :exist_without_symlink_read?, :exist?
-  alias_method :exist?, :exist_with_symlink_read?
+  alias_method_chain :exist?, :symlink_read
   alias_method :exists?, :exist_with_symlink_read?
 
   def exist_or_symlink?
@@ -45,27 +45,23 @@ class Pathname
       writable_without_follow_symlink?
     end
   end
-  alias_method :writable_without_follow_symlink?, :writable?
-  alias_method :writable?, :writable_with_follow_symlink?
+  alias_method_chain :writable?, :follow_symlink
 
   def exist_with_chomp?
     Pathname(to_s.chomp('/')).exist_without_chomp?
   end
-  alias_method :exist_without_chomp?, :exist?
-  alias_method :exist?, :exist_with_chomp?
+  alias_method_chain :exist?, :chomp
   alias_method :exists?, :exist_with_chomp?
 
   def symlink_with_chomp?
     Pathname(to_s.chomp('/')).symlink_without_chomp?
   end
-  alias_method :symlink_without_chomp?, :symlink?
-  alias_method :symlink?, :symlink_with_chomp?
+  alias_method_chain :symlink?, :chomp
 
   def readlink_with_chomp
     Pathname(to_s.chomp('/')).readlink_without_chomp
   end
-  alias_method :readlink_without_chomp, :readlink
-  alias_method :readlink, :readlink_with_chomp
+  alias_method_chain :readlink, :chomp
 
   def expand_path_with_follow_symlink
     if @follow_symlink
@@ -74,8 +70,7 @@ class Pathname
       expand_path_without_follow_symlink
     end
   end
-  alias_method :expand_path_without_follow_symlink, :expand_path
-  alias_method :expand_path, :expand_path_with_follow_symlink
+  alias_method_chain :expand_path, :follow_symlink
 
   def filenames
     filenames = []

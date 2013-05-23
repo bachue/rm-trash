@@ -10,6 +10,7 @@ require 'set'
 require 'array_tree_order'
 require 'pathname'
 require 'helper'
+require 'alias_method_chain'
 
 ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
 
@@ -29,8 +30,7 @@ class IO
     Timeout::timeout(3) { gets_without_timeout(*args) }
   end
 
-  alias_method :gets_without_timeout, :gets
-  alias_method :gets, :gets_with_timeout
+  alias_method_chain :gets, :timeout
 end
 
 RSpec::Matchers.define :be_existed do
