@@ -29,6 +29,18 @@ def parse_options!
                   'reflect an error.  The -f option overrides any previous -i options.') do
       options[:confirmation] = :never
     end
+    opts.on('--rm', 'Find rm from $PATH and execute it. All parameters after --rm will belong to it') do
+      rm = find_rm_from_path
+      if rm
+        exec [rm, *ARGV].join(' ')
+      else
+        $stderr.puts <<-EOF
+Can't find rm from $PATH
+$PATH: #{ENV['PATH'].inspect}
+        EOF
+        exit(-255)
+      end
+    end
     opts.on('--color', '--colour', 'Colorful output') do
       String.colorful = true
     end
@@ -68,3 +80,12 @@ def rmdir?
   options[:directory]
 end
 alias :rm_d? :rmdir?
+
+private
+  def find_rm_from_path
+    dir = ENV['PATH'].split(':').detect {|path|
+      rm = Dir[path + '/rm'].first
+      File.executable? rm if rm
+    }
+    dir + '/rm' if dir
+  end

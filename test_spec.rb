@@ -485,3 +485,17 @@ describe 'test `rm -f`' do
     end
   end
 end
+
+describe 'test `rm --rm`' do
+  before(:each) do
+    create_hierarchical_dirs
+  end
+
+  it 'can call rm from $path to delete all files recursively' do
+    @all_files = @hierachical_files.disorder
+    _, stdout, stderr = rm('--rm', '-rfv', @all_files)
+    stderr.gets.should be_nil
+    @all_files_in_hierachical_files.each {|f| stdout =~ /#{f}\n/ }
+    @all_files.each {|f| f.should_not be_existed }
+  end
+end
