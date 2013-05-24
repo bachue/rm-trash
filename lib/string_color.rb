@@ -2,7 +2,7 @@ class String
   class << self
     attr_accessor :colorful
   end
-  colorful = true
+  self.colorful = true
 
   COLORS =
   {
