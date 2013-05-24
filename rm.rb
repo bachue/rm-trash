@@ -13,8 +13,6 @@ require 'helper'
 
 $retval = 0
 
-ARGV << '--help' if ARGV.empty?
-
 def main files = []
   files = warn_if_any_current_or_parent_directory(files).to_pathnames!
 

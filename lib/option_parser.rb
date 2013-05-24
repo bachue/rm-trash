@@ -2,7 +2,9 @@ require 'string_color'
 
 def parse_options!
   options = { :confirmation => :default }
-  OptionParser.new do |opts|
+  parser = OptionParser.new do |opts|
+    opts.banner = 'Usage: rm [options] file...'
+
     opts.on('-v', 'Be verbose when deleting files, showing them as they are removed.') do
       options[:verbose] = true
     end
@@ -47,7 +49,9 @@ $PATH: #{ENV['PATH'].inspect}
     opts.on('--no-color', '--no-colour', 'White output') do
       String.colorful = false
     end
-  end.parse!
+  end
+  parser.parse! rescue nil # don't raise exception if wrong arg is given
+  parser.parse! ['--help'] if ARGV.empty?
   options
 end
 
