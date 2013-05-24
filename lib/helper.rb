@@ -138,6 +138,25 @@ class Pathname
       end
       descendants
     end
+
+    def self.cache_method(method)
+      aliased_target, punctuation = method.to_s.sub(/([?!=])$/, ''), $1
+      define_method "#{aliased_target}_with_cache#{punctuation}" do |*args|
+        instance_variable_name = "@__cache_#{aliased_target}"
+        if instance_variable_defined? instance_variable_name
+          instance_variable_get instance_variable_name
+        else
+          result = send "#{aliased_target}_without_cache#{punctuation}"
+          instance_variable_set instance_variable_name, result
+          result
+        end
+      end
+      alias_method_chain method, :cache
+    end
+
+    Pathname.instance_methods(false).grep(/\?$/) +
+    [:readlink, :expand_path, :filenames, :ascend_tree, :descend_tree,
+     :permissions, :owner, :gowner].each {|method| cache_method method }
 end
 
 class Array

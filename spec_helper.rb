@@ -59,10 +59,13 @@ at_exit {
     ASK
     if answer.downcase.start_with? 'y'
       say '<%= color(\'Yes Sir!\', :debug) %>'
-      `osascript -e 'tell app "Finder"
-        empty the trash
-        beep
-      end tell'`
+      sleep 1 # to wait for all file descs closed
+      exec <<-CMD
+        osascript -e 'tell app "Finder"
+          empty the trash
+          beep
+        end tell'
+      CMD
     else
       say '<%= color(\'See you :)\', :debug) %>'
     end
