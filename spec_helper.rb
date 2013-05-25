@@ -114,31 +114,28 @@ end
 
 def create_hierarchical_dirs root = @tmpdir
   @tmpdirs << root
-  @hierachical_files, @all_files_in_hierachical_files = [], []
-  ('a'..'b').each {|i0|
+  @hierachical_files, @hierachical_dirs, @all_files_in_hierachical_dirs = [], [], [[], []]
+  ('a'..'b').each_with_index {|i0, i|
     dir = "#{root}/hierachical_dir_#{i0}"
     FileUtils.mkdir(dir).tap {|dirs1|
       ('a'..'b').each {|i1|
-        @all_files_in_hierachical_files.concat FileUtils.mkdir("#{dirs1.first}/dir_#{i1}").tap { |dirs2|
+        @all_files_in_hierachical_dirs[i].concat FileUtils.mkdir("#{dirs1.first}/dir_#{i1}").tap { |dirs2|
           ('a'..'b').each {|i2|
-            @all_files_in_hierachical_files.concat FileUtils.mkdir("#{dirs2.first}/dir_#{i2}").tap { |dirs3|
+            @all_files_in_hierachical_dirs[i].concat FileUtils.mkdir("#{dirs2.first}/dir_#{i2}").tap { |dirs3|
               ('a'..'b').each {|i3|
-                @all_files_in_hierachical_files.concat FileUtils.touch("#{dirs3.first}/file_#{i3}")
+                @all_files_in_hierachical_dirs[i].concat FileUtils.touch("#{dirs3.first}/file_#{i3}")
               }
             }
-            @all_files_in_hierachical_files.concat FileUtils.touch("#{dirs2.first}/file_#{i2}")
+            @all_files_in_hierachical_dirs[i].concat FileUtils.touch("#{dirs2.first}/file_#{i2}")
           }
         }
-        @all_files_in_hierachical_files.concat FileUtils.touch("#{dirs1.first}/file_#{i1}")
+        @all_files_in_hierachical_dirs[i].concat FileUtils.touch("#{dirs1.first}/file_#{i1}")
       }
-      @hierachical_files.concat dirs1
-      @all_files_in_hierachical_files.concat dirs1
+      @hierachical_dirs.concat dirs1
+      @all_files_in_hierachical_dirs[i].concat dirs1
     }
 
-    FileUtils.touch("#{root}/file_#{i0}").tap {|files|
-      @hierachical_files.concat files
-      @all_files_in_hierachical_files.concat files
-    }
+    @hierachical_files = FileUtils.touch("#{root}/file_#{i0}")
   }
 end
 

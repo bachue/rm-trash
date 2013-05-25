@@ -128,7 +128,7 @@ describe 'test `rm -r`' do
     @all_files = @hierachical_files.disorder
     _, stdout, stderr = rm('-rv', @all_files)
     stderr.gets.should be_nil
-    @all_files_in_hierachical_files.each {|f| stdout =~ /#{f}\n/ }
+    @all_files_in_hierachical_dirs.flatten.each {|f| stdout =~ /#{f}\n/ }
     @all_files.each {|f| f.should_not be_existed }
   end
 end
@@ -246,11 +246,13 @@ describe 'test `rm -i`' do
       @not_existed_files = @files.map {|f| f + '_' }
       @all_files = @files + @not_existed_files
       stdin, stdout, stderr = rm('-iv', *@all_files)
-      @not_existed_files.each {|f| stderr.gets.should == "rm: #{f}: No such file or directory\n" }
-
-      @files.each {|f|
-        stderr.gets('? ').should == "remove #{f}? "
-        stdin.puts 'y'
+      @all_files.each {|f|
+        if f.end_with? '_'
+          stderr.gets.should == "rm: #{f}: No such file or directory\n"
+        else
+          stderr.gets('? ').should == "remove #{f}? "
+          stdin.puts 'y'
+        end
       }
       @files.each {|f| stdout.gets.should == "#{f}\n" }
       @files.each {|f| f.should_not be_existed }
@@ -259,11 +261,14 @@ describe 'test `rm -i`' do
     it 'should add -d if try to rm a directory' do
       @all_files = @files + @empty_dirs
       stdin, stdout, stderr = rm('-iv', *@all_files)
-      @empty_dirs.each {|f| stderr.gets.should == "rm: #{f}: is a directory\n" }
 
       @files.each {|f|
-        stderr.gets('? ').should == "remove #{f}? "
-        stdin.puts 'y'
+        if File.directory? f
+          stderr.gets.should == "rm: #{f}: is a directory\n"
+        else
+          stderr.gets('? ').should == "remove #{f}? "
+          stdin.puts 'y'
+        end
       }
       @files.each {|f| stdout.gets.should == "#{f}\n" }
       @files.each {|f| f.should_not be_existed }
@@ -327,10 +332,14 @@ describe 'test `rm -i`' do
       @enable_to_delete = @empty_dirs + @files
       @all_files = @enable_to_delete + @non_empty_dirs
       stdin, stdout, stderr = rm('-ivd', *@all_files)
-      @non_empty_dirs.each {|f| stderr.gets.should == "rm: #{f}: Directory not empty\n" }
+
       @enable_to_delete.each { |f|
-        stderr.gets('? ').should == "remove #{f}? "
-        stdin.puts 'y'
+        if Pathname(f).directory? && Pathname(f).has_children?
+          stderr.gets.should == "rm: #{f}: Directory not empty\n"
+        else
+          stderr.gets('? ').should == "remove #{f}? "
+          stdin.puts 'y'
+        end
       }
       @enable_to_delete.each {|f| stdout.gets.should == "#{f}\n" }
       @enable_to_delete.each {|f| f.should_not be_existed }
@@ -342,8 +351,6 @@ describe 'test `rm -i`' do
       @empty_dirs.each {|f|
         stderr.gets('? ').should == "examine files in directory #{f}? "
         stdin.puts 'y'
-      }
-      @empty_dirs.each {|f|
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'y'
       }
@@ -359,20 +366,27 @@ describe 'test `rm -i`' do
     end
 
     it 'can rm all files in a directory with confirmation' do
-      @all_files = @hierachical_files.tree_order
+      @all_files = (@hierachical_files + @hierachical_dirs).tree_order
       @deleted_files = []
       stdin, stdout, stderr = rm('-irv', @all_files)
-      @all_files_in_hierachical_files.select {|f| File.directory? f }.tree_order(true).each {|f|
-        stderr.gets('? ').should == "examine files in directory #{f}? "
-        stdin.puts 'y'
-      }
-      @all_files_in_hierachical_files.tree_order.each {|f|
+      @hierachical_files.each {|f|
         @deleted_files << f
         stderr.gets('? ').should == "remove #{f}? "
         stdin.puts 'y'
       }
+      @all_files_in_hierachical_dirs.each_with_index do |dirs, _|
+        dirs.select {|f| File.directory? f }.tree_order(true).each {|f|
+          stderr.gets('? ').should == "examine files in directory #{f}? "
+          stdin.puts 'y'
+        }
+        dirs.tree_order.each {|f|
+          @deleted_files << f
+          stderr.gets('? ').should == "remove #{f}? "
+          stdin.puts 'y'
+        }
+      end
 
-       @deleted_files.each { |f|
+      @deleted_files.each { |f|
         stdout.gets.should == "#{f}\n"
       }
       @all_files.each {|f| f.should_not be_existed }
@@ -495,7 +509,7 @@ describe 'test `rm --rm`' do
     @all_files = @hierachical_files.disorder
     _, stdout, stderr = rm('--rm', '-rfv', @all_files)
     stderr.gets.should be_nil
-    @all_files_in_hierachical_files.each {|f| stdout =~ /#{f}\n/ }
+    @all_files_in_hierachical_dirs.flatten.each {|f| stdout =~ /#{f}\n/ }
     @all_files.each {|f| f.should_not be_existed }
   end
 end
