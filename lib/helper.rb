@@ -139,24 +139,27 @@ class Pathname
       descendants
     end
 
-    def self.cache_method(method)
-      aliased_target, punctuation = method.to_s.sub(/([?!=])$/, ''), $1
-      define_method "#{aliased_target}_with_cache#{punctuation}" do |*args|
-        instance_variable_name = "@__cache_#{aliased_target}"
-        if instance_variable_defined? instance_variable_name
-          instance_variable_get instance_variable_name
-        else
-          result = send "#{aliased_target}_without_cache#{punctuation}"
-          instance_variable_set instance_variable_name, result
-          result
-        end
-      end
-      alias_method_chain method, :cache
-    end
+    ## This code can build a cache layer for Pathname, but it should be applied seriously or
+    ## there'll be lots of bugs in code. I won't uncomment it until I feel Pathname has performance issue
+    #
+    # def self.cache_method(method)
+    #   aliased_target, punctuation = method.to_s.sub(/([?!=])$/, ''), $1
+    #   define_method "#{aliased_target}_with_cache#{punctuation}" do |*args|
+    #     instance_variable_name = "@__cache_#{aliased_target}"
+    #     if instance_variable_defined? instance_variable_name
+    #       instance_variable_get instance_variable_name
+    #     else
+    #       result = send "#{aliased_target}_without_cache#{punctuation}"
+    #       instance_variable_set instance_variable_name, result
+    #       result
+    #     end
+    #   end
+    #   alias_method_chain method, :cache
+    # end
 
-    Pathname.instance_methods(false).grep(/\?$/) +
-    [:readlink, :expand_path, :filenames, :ascend_tree, :descend_tree,
-     :permissions, :owner, :gowner].each {|method| cache_method method }
+    # Pathname.instance_methods(false).grep(/\?$/) +
+    # [:readlink, :expand_path, :filenames, :ascend_tree, :descend_tree,
+    #  :permissions, :owner, :gowner].each {|method| cache_method method }
 end
 
 class Array
