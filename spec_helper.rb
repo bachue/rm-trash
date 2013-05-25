@@ -110,6 +110,7 @@ def create_deep_directory_tree root = @tmpdir
   dirs = ('a'..'c').to_a
   FileUtils.mkdir_p root + '/' + dirs.join('/')
   @tree_root = root + '/a'
+  @all_dirs = Pathname(@tree_root).ascend_tree.map(&:to_s)
 end
 
 def create_hierarchical_dirs root = @tmpdir

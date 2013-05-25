@@ -513,3 +513,17 @@ describe 'test `rm --rm`' do
     @all_files.each {|f| f.should_not be_existed }
   end
 end
+
+describe 'test when relational parameters' do
+  before(:each) do
+    create_deep_directory_tree
+  end
+
+  it 'can still delete all files even parameters are relational' do
+    _, stdout, stderr = rm('-dv', *@all_dirs)
+    @all_dirs[0...-1].each {|dir|
+      stderr.gets.should == "rm: #{dir}: Directory not empty\n"
+    }
+    stdout.gets.should == "#{@all_dirs.last}\n"
+  end
+end
