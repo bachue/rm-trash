@@ -35,7 +35,7 @@ def parse_options!
     opts.on('--rm', 'Find rm from $PATH and execute it. All parameters after --rm will belong to it') do
       rm = find_rm_from_path
       if rm
-        exec [rm, *ARGV].join(' ')
+        exec ['rm', *ARGV].join(' ')
       else
         $stderr.puts <<-EOF
 Can't find rm from $PATH
@@ -88,9 +88,7 @@ alias :rm_d? :rmdir?
 
 private
   def find_rm_from_path
-    dir = ENV['PATH'].split(':').detect {|path|
-      rm = Dir[path + '/rm'].first
-      File.executable? rm if rm
-    }
-    dir + '/rm' if dir
+    path = `which rm`
+    return nil if path.empty?
+    path
   end
