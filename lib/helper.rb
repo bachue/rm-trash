@@ -120,12 +120,10 @@ class Pathname
   # Color Support
   def method_missing(method, *args)
     method = method.to_s
-    if String.colorful
-      if String::COLORS.keys.include?(method) ||
-         String::COLORS.keys.map {|color| "bright_#{color}"}.include?(method) ||
-         method == 'bold'
-        return to_s.send method, *args
-     end
+    if String::COLORS.keys.include?(method) ||
+       String::COLORS.keys.map {|color| "bright_#{color}"}.include?(method) ||
+       method == 'bold'
+      return to_s.send method, *args
     end
 
     super
