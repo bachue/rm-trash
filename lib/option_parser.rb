@@ -1,3 +1,4 @@
+require 'optparse'
 require 'string_color'
 
 def parse_options!
