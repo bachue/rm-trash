@@ -42,33 +42,28 @@ end
 
 def assert_existed? file
   unless ret = file.follow_symlink? ? file.exists? : file.exists_or_symlink?
-    error file, :no_file
+    error file, Errno::ENOENT
   end
   ret
 end
 
 def assert_dir? dir
   unless ret = dir.directory?
-    error dir, :not_dir
+    error dir, Errno::ENOTDIR
   end
   ret
 end
 
 def assert_no_children? dir
   if ret = dir.directory? && dir.has_children?
-    error dir, :not_empty
+    error dir, Errno::ENOTEMPTY
   end
   !ret
 end
 
-def error file, err
+def error file, errno
   return if rm_f?
-  error = 'rm: ' + {
-    :no_file => "#{file}: No such file or directory",
-    :not_dir => "#{file}: Not a directory",
-    :not_empty => "#{file}: Directory not empty",
-    :is_dir => "#{file}: is a directory"
-  }[err]
+  error = "rm: #{file}: #{errno.new.message}"
   $stderr.puts error.red
   $retval = 1
 end

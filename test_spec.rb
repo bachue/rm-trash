@@ -30,7 +30,7 @@ describe 'test `rm`' do
     _, stdout, stderr = rm(*@all_files)
     stdout.gets.should be_nil
     stderr = stderr.gets nil
-    @dirs.each {|f| stderr.should =~ /rm: #{f}: is a directory\n/ }
+    @dirs.each {|f| stderr.should =~ /rm: #{f}: Is a directory\n/ }
     @files.each {|f| f.should_not be_existed }
     @dirs.each {|f| f.should be_existed }
   end
@@ -264,7 +264,7 @@ describe 'test `rm -i`' do
 
       @files.each {|f|
         if File.directory? f
-          stderr.gets.should == "rm: #{f}: is a directory\n"
+          stderr.gets.should == "rm: #{f}: Is a directory\n"
         else
           stderr.gets('? ').should == "remove #{f}? "
           stdin.puts 'y'

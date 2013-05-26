@@ -41,7 +41,7 @@ def main files = []
           elsif rm_d?
             [file]
           else
-            error file, :is_dir
+            error file, Errno::EISDIR
             nil
           end
         else
@@ -73,7 +73,7 @@ def main files = []
         has_confirmed = false
         if rm_i?
           if ask_for_remove? file
-            error file, :not_empty and next if file.flag == :cannot_delete
+            error file, Errno::ENOTEMPTY and next if file.flag == :cannot_delete
             has_confirmed = true
           else
             list[idx..-1].each {|f|
@@ -85,7 +85,7 @@ def main files = []
 
         unless has_confirmed || rm_f? || file.writable?
           if ask_for_override?(file)
-            error file, :not_empty and next if file.flag == :cannot_delete
+            error file, Errno::ENOTEMPTY and next if file.flag == :cannot_delete
             next
           else
             list[idx..-1].each {|f|
@@ -95,7 +95,7 @@ def main files = []
           end
         end
 
-        error file, :not_empty if file.flag == :cannot_delete
+        error file, Errno::ENOTEMPTY if file.flag == :cannot_delete
       end
 
       list.reject! {|file| file.flag == :cannot_delete }
