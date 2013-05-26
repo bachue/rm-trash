@@ -6,6 +6,7 @@ require 'string_color'
 
 class Pathname
   attr_accessor :flag # user defined flag
+  alias_method :to_str, :to_s # to be compatible with RUBY1.9+
 
   def exist_with_symlink_read?
     if symlink?
