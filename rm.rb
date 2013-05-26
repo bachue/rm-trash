@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env ruby -W0
 $: << File.expand_path(File.dirname(__FILE__) + '/lib')
 
 require 'optparse'
