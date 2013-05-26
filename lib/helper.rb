@@ -2,6 +2,7 @@ require 'etc'
 require 'pathname'
 require 'array_tree_order'
 require 'alias_method_chain'
+require 'string_color'
 
 class Pathname
   attr_accessor :flag # user defined flag
@@ -114,6 +115,20 @@ class Pathname
 
   def descendant_of? path
     to_s.start_with? path.to_s
+  end
+
+  # Color Support
+  def method_missing(method, *args)
+    method = method.to_s
+    if String.colorful
+      if String::COLORS.keys.include?(method) ||
+         String::COLORS.keys.map {|color| "bright_#{color}"}.include?(method) ||
+         method == 'bold'
+        return to_s.send method, *args
+     end
+    end
+
+    super
   end
 
   # delegate these methods to :to_s

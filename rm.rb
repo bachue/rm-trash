@@ -109,7 +109,13 @@ def main files = []
         list = groups[false]
       end
       rm_all! trees.map {|tree| tree.keys[0].expand_path }
-      trees.each {|tree| tree.values.each {|file| puts file }} if verbose?
+      trees.each {|tree|
+        tree.values.each {|files|
+          files.each {|file|
+            puts file.bold
+          }
+        }
+      } if verbose?
     end
   end
 end
