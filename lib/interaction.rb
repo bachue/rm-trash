@@ -60,7 +60,7 @@ def assert_no_children? dir
 end
 
 def assert_valid? file
-  if ret = /(^|\/)\.\// =~ file
+  if ret = /(^|\/)\.\/$/ =~ file
     error file, Errno::EINVAL
   end
   !ret
