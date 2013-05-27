@@ -477,10 +477,10 @@ describe 'test `rm -f`' do
       }
       stderr.gets.should == "rm: #{@subdir}: Directory not empty\n"
       stderr.gets.should == "rm: #{@dir}: Directory not empty\n"
-      groups = @all_files_without_permission.group_by {|f| File.basename(f) == '1' }
-      groups[true].reverse.each {|f| stdout.gets.should == "#{f}\n" }
-      groups[true].each {|f| f.should_not be_existed }
-      groups[false].each {|f| f.should be_existed }
+      groups = @all_files_without_permission.partition {|f| File.basename(f) == '1' }
+      groups.first.reverse.each {|f| stdout.gets.should == "#{f}\n" }
+      groups.first.each {|f| f.should_not be_existed }
+      groups.last.each {|f| f.should be_existed }
     end
 
     it 'shouldn\'t ask you with `rm -f`' do

@@ -128,9 +128,9 @@ def decompose_trees list
   trees = []
   while list && list.size > 0
     root = list.last
-    groups = list.group_by {|file| file.descendant_of? root }
-    trees << {root => groups[true]}
-    list = groups[false]
+    groups = list.partition {|file| file.descendant_of? root }
+    trees << {root => groups.first}
+    list = groups.last
   end
   trees
 end
