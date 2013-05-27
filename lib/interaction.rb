@@ -40,7 +40,7 @@ end
 
 def assert_existed? file
   unless ret = file.follow_symlink? ? file.exists? : file.exists_or_symlink?
-    error file, Errno::ENOENT
+    error file, Errno::ENOENT unless rm_f?
   end
   ret
 end
@@ -67,7 +67,6 @@ def assert_valid? file
 end
 
 def error file, errno
-  return if rm_f?
   error = "rm: #{file}: #{errno.new.message}"
   $stderr.puts error.red
   $retval = 1

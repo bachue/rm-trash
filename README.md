@@ -82,6 +82,8 @@ remove dir? y
 	* 本程序在这种情况下将直接显示`Directory not empty`错误
 	* 系统内置的`rm`在这种情况下依然会询问用户是否删除，在用户确认删除后再显示出`Directory not empty`错误
 
+* Invalid argument错误出现的时机略有差异
+
 ## Bug 报告
 * 登陆 `GitCafe`
 * 访问 <https://gitcafe.com/bachue/rm-trash/tickets>
