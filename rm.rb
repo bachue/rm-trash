@@ -16,6 +16,8 @@ def main files = []
   files = warn_if_any_current_or_parent_directory(files).to_pathnames!
 
   files.each do |file|
+    next unless assert_valid? file
+
     if assert_existed? file
       if file.to_s.end_with? '/'
         if file.symlink?

@@ -442,6 +442,79 @@ describe 'test `rm -i`' do
       end
     end
   end
+
+  context 'won\'t allow user to delete "/." or "/.."' do
+    before(:each) do
+      create_non_empty_dirs
+    end
+
+    it 'should reject to delete "."' do
+      FileUtils.cd @tmpdir do
+        @params = ['non_empty_dir_a/.', 'non_empty_dir_b/.']
+        _, stdout, stderr = rm('-v', *@params)
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
+        @non_empty_dirs.each {|f| f.should be_existed }
+      end
+    end
+
+    it 'should reject to delete ".."' do
+      FileUtils.cd @tmpdir do
+        @params = ['non_empty_dir_a/..', 'non_empty_dir_b/..']
+        _, stdout, stderr = rm('-v', *@params)
+        stderr.gets.should == "rm: \".\" and \"..\" may not be removed\n"
+        @non_empty_dirs.each {|f| f.should be_existed }
+      end
+    end
+  end
+
+  context 'still allow user to delete "../"' do
+    before(:each) do
+      create_non_empty_dirs
+    end
+
+    it 'should reject to delete ".."' do
+      FileUtils.cd "#{@tmpdir}/non_empty_dir_a" do
+        _, stdout, stderr = rm('-vr', '../')
+        stdout.gets.should == "..//non_empty_dir_a/file\n"
+        stdout.gets.should == "..//non_empty_dir_a\n"
+        stdout.gets.should == "..//non_empty_dir_b/file\n"
+        stdout.gets.should == "..//non_empty_dir_b\n"
+        stdout.gets.should == "../\n"
+        "#{@tmpdir}/non_empty_dir_a".should_not be_existed
+        "#{@tmpdir}/non_empty_dir_b".should_not be_existed
+      end
+    end
+
+    it 'should reject to delete "/.."' do
+      FileUtils.cd "#{@tmpdir}/non_empty_dir_a" do
+        _, stdout, stderr = rm('-vr', '../non_empty_dir_b/../')
+        stdout.gets.should == "../non_empty_dir_b/..//non_empty_dir_a/file\n"
+        stdout.gets.should == "../non_empty_dir_b/..//non_empty_dir_a\n"
+        stdout.gets.should == "../non_empty_dir_b/..//non_empty_dir_b/file\n"
+        stdout.gets.should == "../non_empty_dir_b/..//non_empty_dir_b\n"
+        stdout.gets.should == "../non_empty_dir_b/../\n"
+        "#{@tmpdir}/non_empty_dir_a".should_not be_existed
+        "#{@tmpdir}/non_empty_dir_b".should_not be_existed
+      end
+    end
+  end
+
+  context 'invalid argument when try to `rm ./`' do
+    before(:each) do
+      create_files
+    end
+
+    it 'should reject to delete "./"' do
+      FileUtils.cd @tmpdir do
+        @params = ['./', '*', 'file1/./']
+        _, stdout, stderr = rm('-v', *@params)
+        stderr.gets.should == "rm: ./: Invalid argument\n"
+        stderr.gets.should == "rm: file1/./: Invalid argument\n"
+        @files.each {|f| stdout.gets.should == "#{File.basename(f)}\n" }
+        @files.each {|f| f.should_not be_existed }
+      end
+    end
+  end
 end
 
 describe 'test `rm -f`' do

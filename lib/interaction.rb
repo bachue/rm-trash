@@ -6,9 +6,7 @@ def warn_if_any_current_or_parent_directory paths
   result = []
   err = false
   paths.each do |path|
-    subpaths = path.split('/').map(&:strip).reject(&:empty?)
-    next if subpaths.empty?
-    if ['.', '..'].include?(subpaths.last)
+    if /(^|\/)\.{1,2}$/ =~ path
       unless err
         $stderr.puts 'rm: "." and ".." may not be removed'
         $retval = 1
@@ -57,6 +55,13 @@ end
 def assert_no_children? dir
   if ret = dir.directory? && dir.has_children?
     error dir, Errno::ENOTEMPTY
+  end
+  !ret
+end
+
+def assert_valid? file
+  if ret = /(^|\/)\.\// =~ file
+    error file, Errno::EINVAL
   end
   !ret
 end
