@@ -36,7 +36,7 @@ def main files = []
       up list
       next if list.empty?
 
-      trees = decompose_trees list
+      trees = decompose_trees list.tree_order(true).reverse
       rm_all! trees.map {|tree| tree.keys[0].expand_path }
       print_files trees
     end
@@ -143,10 +143,8 @@ end
 # output all files to delete if needed
 def print_files trees
   trees.each {|tree|
-    tree.values.each {|files|
-      files.each {|file|
-        puts file.bold
-      }
+    tree.values[0].tree_order.each {|file|
+      puts file.bold
     }
   } if verbose?
 end
