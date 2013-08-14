@@ -1,4 +1,5 @@
 require 'open3'
+require 'helper'
 require 'interaction'
 require 'string_color'
 
@@ -6,11 +7,11 @@ require 'string_color'
 # file param must be absolute path
 def rm_all! files
   run <<-CMD
-    osascript -e '
-      tell app "Finder"
-        #{files.map {|file| "delete POSIX file \"#{file}\"" }.join("\n")}
+    osascript -e "
+      tell app \\\"Finder\\\"
+        #{files.map {|file| "delete POSIX file \\\"#{escape_filename file}\\\"" }.join("\n")}
       end tell
-    '
+    "
   CMD
 end
 

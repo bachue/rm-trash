@@ -36,6 +36,19 @@ describe 'test `rm`' do
   end
 end
 
+describe 'test `rm` files whose name include special character' do
+  before(:each) do
+    create_files_with_quote
+  end
+
+  it 'shoule delete all files' do
+    _, stdout, stderr = rm(*@files + [:inspect => true])
+    stdout.gets.should be_nil
+    stderr.gets.should be_nil
+    @files.each {|f| f.should_not be_existed }
+  end
+end
+
 describe 'test `rm -v`' do
   before(:each) do
     create_files

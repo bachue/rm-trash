@@ -20,6 +20,8 @@ HighLine.color_scheme = HighLine::SampleColorScheme.new
 RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb --no-color')
 
 def rm *args
+  options = args.pop if args.last.is_a?(Hash)
+  args = args.flatten.map(&:inspect) if options && options[:inspect]
   stdin, stdout, stderr = Open3.popen3 [RM, *args].join(' ')
   @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]
@@ -57,7 +59,7 @@ at_exit {
     answer = ask <<-ASK
 <%= color('Are you sure you want to permanently erase the items in the Trash? [', :notice) %><%= color('y', :error) %><%= color('/', :notice) %><%= color('N', :debug) %><%= color(']', :notice) %>
     ASK
-    if answer.downcase.start_with? 'y'
+    if answer && answer.downcase.start_with?('y')
       say '<%= color(\'Yes Sir!\', :debug) %>'
       sleep 1 # to wait for all file descs closed
       exec <<-CMD
@@ -82,6 +84,14 @@ def create_files root = @tmpdir
   @tmpdirs << root
   @files = (1..2).map {|i|
     file = "#{root}/file_#{i}"
+    FileUtils.touch file
+  }.flatten
+end
+
+def create_files_with_quote root = @tmpdir
+  @tmpdirs << root
+  @files = ["'", '"', %%'"'%, %%"'"%, %%''%, %%""%, %%'''%, %%"""%].map {|name|
+    file = "#{root}/#{name}"
     FileUtils.touch file
   }.flatten
 end

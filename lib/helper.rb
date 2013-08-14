@@ -187,3 +187,8 @@ class Array
     map! {|ele| Pathname(ele) }
   end
 end
+
+# Convert 123""'456'""789 to 123\\\"\\\"'456'\\\"\\\"789
+def escape_filename filename
+  filename.to_s.inspect.inspect.gsub(/^"\\"(.+)\\""$/, '\1')
+end
