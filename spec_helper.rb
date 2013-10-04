@@ -1,3 +1,5 @@
+# Encoding: UTF-8
+
 require 'rubygems'
 require 'bundler'
 require 'bundler/setup'
@@ -21,7 +23,10 @@ RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb --no-color')
 
 def rm *args
   options = args.pop if args.last.is_a?(Hash)
-  args = args.flatten.map(&:inspect) if options && options[:inspect]
+  if options && options[:inspect]
+    is_inspect_a_proc = options[:inspect].is_a?(Proc)
+    args = args.flatten.map {|arg| is_inspect_a_proc ? options[:inspect][arg] : arg.inspect }
+  end
   stdin, stdout, stderr = Open3.popen3 [RM, *args].join(' ')
   @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]
@@ -80,6 +85,24 @@ class Array
   end
 end
 
+class String
+  def inspect_without_quotes() inspect.gsub(/^"(.+)"$/, '\1') end
+end
+
+class Object
+  def self.redefine_method_within src, dst
+    tmp = "#{src}_#{rand 10**10}"
+    alias_method tmp, src
+    alias_method src, dst
+    begin
+      yield
+    ensure
+      alias_method src, tmp
+      remove_method tmp
+    end
+  end
+end
+
 def create_files root = @tmpdir
   @tmpdirs << root
   @files = (1..2).map {|i|
@@ -91,6 +114,22 @@ end
 def create_files_with_quote root = @tmpdir
   @tmpdirs << root
   @files = ["'", '"', %%'"'%, %%"'"%, %%''%, %%""%, %%'''%, %%"""%].map {|name|
+    file = "#{root}/#{name}"
+    FileUtils.touch file
+  }.flatten
+end
+
+def create_files_with_non_ascii_chars root = @tmpdir
+  @tmpdirs << root
+  @files = ['fi_文件_le', '文件', 'ぶんしょ', 'Документ'].map {|name|
+    file = "#{root}/#{name}"
+    FileUtils.touch file
+  }.flatten
+end
+
+def create_files_with_non_ascii_chars_and_quote root = @tmpdir
+  @tmpdirs << root
+  @files = ['我的"文档"！'].map {|name|
     file = "#{root}/#{name}"
     FileUtils.touch file
   }.flatten

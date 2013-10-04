@@ -79,7 +79,9 @@ rescue
 end
 
 def halt message
-  $stderr.puts unexpected_error_message(message)
+  message = unexpected_error_message(message)
+  $stderr.puts message.red
+  send_mail 'Bachue', 'bachue.shu@gmail.com', '[rm-trash] error message', message
   exit(-256)
 end
 
@@ -90,5 +92,11 @@ Caller: #{PP.pp(caller, '').strip }
 Global Variables: #{ PP.pp(global_variables.inject({}) {|h, gb| h[gb] = eval(gb.to_s); h}, '').strip }
 Instance Variables: #{ PP.pp(instance_variables.inject({}) {|h, ib| h[ib] = instance_variable_get(ib.to_s); h}, '').strip }
 It should be a bug, please report this problem to bachue.shu@gmail.com!
-  """.red
+  """
+end
+
+def send_mail name, email, subject, content
+  stdin, stdout, stderr = Open3.popen3 "mail -s '#{subject.gsub("'", '"')}' bachue.shu@gmail.com"
+  stdin.puts content
+  [stdin, stdout, stderr].each(&:close)
 end

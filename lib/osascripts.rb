@@ -9,7 +9,7 @@ def rm_all! files
   run <<-CMD
     osascript -e "
       tell app \\\"Finder\\\"
-        #{files.map {|file| "delete POSIX file \\\"#{escape_filename file}\\\"" }.join("\n")}
+        #{files.map {|file| "delete POSIX file \\\"#{file.to_s.escape_as_filename}\\\"" }.join("\n")}
       end tell
     "
   CMD
@@ -20,7 +20,9 @@ def run cmd
     stdin, stdout, stderr = Open3.popen3 cmd
     if error = stderr.gets(nil)
       $retval = 1
-      $stderr.puts unexpected_error_message("#{error} from `#{cmd}'")
+      message = unexpected_error_message("#{error} from `#{cmd}'")
+      $stderr.puts message.red
+      send_mail 'Bachue', 'bachue.shu@gmail.com', '[rm-trash] error message', message
     end
     [stdin, stdout, stderr].each(&:close)
   end

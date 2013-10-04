@@ -36,16 +36,48 @@ describe 'test `rm`' do
   end
 end
 
-describe 'test `rm` files whose name include special character' do
-  before(:each) do
-    create_files_with_quote
+describe 'test `rm` files whose name' do
+  context 'include quotes' do
+    before(:each) do
+      create_files_with_quote
+    end
+
+    it 'shoule delete all files' do
+      _, stdout, stderr = rm(*@files + [:inspect => true])
+      stdout.gets.should be_nil
+      stderr.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
   end
 
-  it 'shoule delete all files' do
-    _, stdout, stderr = rm(*@files + [:inspect => true])
-    stdout.gets.should be_nil
-    stderr.gets.should be_nil
-    @files.each {|f| f.should_not be_existed }
+  context 'include non-ascii chars' do
+    before(:each) do
+      create_files_with_non_ascii_chars
+    end
+
+    it 'should delete all files' do
+      _, stdout, stderr = rm(*@files)
+      stdout.gets.should be_nil
+      stderr.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
+  end
+
+  context 'include non-ascii chars and quotes' do
+    before(:each) do
+     create_files_with_non_ascii_chars_and_quote
+    end
+
+    it 'should delete all files' do
+      _, stdout, stderr = rm(*@files + [:inspect => proc { |name|
+          String.redefine_method_within(:escape_quote, :inspect_without_quotes) do
+            %%"#{name.escape_as_filename}"%
+          end
+        }])
+      stdout.gets.should be_nil
+      stderr.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
   end
 end
 
@@ -185,7 +217,7 @@ describe 'to delete symbolic links' do
 
     it 'can follow a symbolic link if the path is end with "/"' do
       @params = @links_to_dirs.map {|f| f + '/'}
-      @output_files = @params.map {|f| Pathname(f).descend_tree }.flatten
+      @output_files = @params.map {|f| Pathname(f).descend_tree.map(&:to_s) }.flatten
       _, stdout, stderr = rm('-vr', *@params)
       stderr.gets.should be_nil
       @output_files.each {|f| stdout.gets.should == "#{f}\n" }
