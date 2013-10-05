@@ -23,10 +23,7 @@ RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb --no-color --no-bug-repor
 
 def rm *args
   options = args.pop if args.last.is_a?(Hash)
-  if options && options[:inspect]
-    is_inspect_a_proc = options[:inspect].is_a?(Proc)
-    args = args.flatten.map {|arg| is_inspect_a_proc ? options[:inspect][arg] : arg.inspect }
-  end
+  args = args.flatten.map(&:inspect_u) if options && options[:inspect]
   stdin, stdout, stderr = Open3.popen3 [RM, *args].join(' ')
   @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]
@@ -83,10 +80,6 @@ class Array
   def disorder
     sort {rand * 2 - 1}
   end
-end
-
-class String
-  def inspect_without_quotes() inspect.gsub(/^"(.+)"$/, '\1') end
 end
 
 class Object

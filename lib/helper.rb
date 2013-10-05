@@ -191,19 +191,15 @@ end
 class String
   # Convert 123""'456'""789 to 123\\\"\\\"'456'\\\"\\\"789
   def escape_as_filename
-    if defined?(Encoding)
-      escape_quote
-    else # For Ruby 1.8
-      special_chars = split(//u).select {|c| c.bytesize > 1}
-      chars_map = Hash[special_chars.map {|c| [c, c.escape_quote ] }]
-      name = escape_quote
-      chars_map.each {|origin, debug| name.gsub! debug, origin }
-      name
-    end
+    escape_quote
   end
 
-  protected
+  def inspect_u
+    %%"#{gsub('\\', '\\\\\\').gsub('"', '\"')}"%
+  end
+
+  private
     def escape_quote
-      inspect.inspect.gsub(/^"\\"(.+)\\""$/, '\1')
+      inspect_u.inspect_u.gsub(/^"\\"(.+)\\""$/, '\1')
     end
 end

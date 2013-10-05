@@ -69,11 +69,7 @@ describe 'test `rm` files whose name' do
     end
 
     it 'should delete all files' do
-      _, stdout, stderr = rm(*@files + [:inspect => proc { |name|
-          String.redefine_method_within(:escape_quote, :inspect_without_quotes) do
-            %%"#{name.escape_as_filename}"%
-          end
-        }])
+      _, stdout, stderr = rm(*@files + [:inspect => true])
       stdout.gets.should be_nil
       stderr.gets.should be_nil
       @files.each {|f| f.should_not be_existed }
