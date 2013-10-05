@@ -1,6 +1,8 @@
 require 'optparse'
 require 'string_color'
 
+PARAMS = ARGV.dup
+
 def parse_options!
   options = { :confirmation => :default }
   internal_options = ['--no-bug-report'].freeze
