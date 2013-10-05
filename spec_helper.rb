@@ -19,7 +19,7 @@ ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
 Bundler.require :test
 HighLine.color_scheme = HighLine::SampleColorScheme.new
 
-RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb --no-color')
+RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb --no-color --no-bug-report')
 
 def rm *args
   options = args.pop if args.last.is_a?(Hash)

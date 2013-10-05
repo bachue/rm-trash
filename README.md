@@ -27,6 +27,7 @@ Usage: rm [options] file...
     -r                               Equivalent to -R.
     -i                               Request confirmation before attempting to remove each file, regardless of the file's permissions, or whether or not the standard input device is a terminal.  The -i option overrides any previous -f options.
     -f                               Attempt to remove the files without prompting for confirmation, regardless of the file's permissions.  If the file does not exist, do not display a diagnostic message or modify the exit status to reflect an error.  The -f option overrides any previous -i options.
+    -h, --help                       Display this help
         --rm                         Find rm from $PATH and execute it. All parameters after --rm will belong to it
         --color, --colour            Colorful output
         --no-color, --no-colour      White output

@@ -3,6 +3,8 @@ require 'string_color'
 
 def parse_options!
   options = { :confirmation => :default }
+  internal_options = ['--no-bug-report'].freeze
+
   parser = OptionParser.new do |opts|
     opts.banner = 'Usage: rm [options] file...'
 
@@ -32,6 +34,10 @@ def parse_options!
                   'reflect an error.  The -f option overrides any previous -i options.') do
       options[:confirmation] = :never
     end
+    opts.on('-h', '--help', 'Display this help') do
+      puts opts.to_s.split("\n").delete_if {|line| line =~ Regexp.union(internal_options) }.join("\n")
+      exit 0
+    end
     opts.on('--rm', 'Find rm from $PATH and execute it. All parameters after --rm will belong to it') do
       rm = find_rm_from_path
       if rm
@@ -49,6 +55,10 @@ $PATH: #{ENV['PATH'].inspect}
     end
     opts.on('--no-color', '--no-colour', 'White output') do
       String.colorful = false
+    end
+    opts.on('--no-bug-report', 'Stop report bug to developer via email') do
+      # for internal only
+      options[:no_bug_report] = true
     end
   end
   parser.parse! rescue nil # don't raise exception if wrong arg is given
@@ -85,6 +95,10 @@ def rmdir?
   options[:directory]
 end
 alias :rm_d? :rmdir?
+
+def no_bug_report?
+  options[:no_bug_report]
+end
 
 private
   def find_rm_from_path

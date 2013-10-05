@@ -96,6 +96,7 @@ It should be a bug, please report this problem to bachue.shu@gmail.com!
 end
 
 def send_mail name, email, subject, content
+  return if no_bug_report?
   stdin, stdout, stderr = Open3.popen3 "mail -s '#{subject.gsub("'", '"')}' bachue.shu@gmail.com"
   stdin.puts content
   [stdin, stdout, stderr].each(&:close)
