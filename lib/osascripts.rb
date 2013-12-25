@@ -18,11 +18,16 @@ end
 def run cmd
   do_error_handling do
     stdin, stdout, stderr = Open3.popen3 cmd
-    if error = stderr.gets(nil)
+    error = stderr.gets(nil)
+    if error
       $retval = 1
-      message = unexpected_error_message("#{error} from `#{cmd}'")
-      $stderr.puts message.red
-      send_mail 'Bachue', 'bachue.shu@gmail.com', '[rm-trash] error message', message
+      if error.include?('Finder got an error: AppleEvent timed out')
+        $stderr.puts 'rm: delete timeout'.red
+      else
+        message = unexpected_error_message("#{error} from `#{cmd}'")
+        $stderr.puts message.red
+        send_mail 'Bachue', 'bachue.shu@gmail.com', '[rm-trash] error message', message
+      end
     end
     [stdin, stdout, stderr].each(&:close)
   end
