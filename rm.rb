@@ -100,9 +100,26 @@ def up list
       else
         list[idx..-1].each {|f|
           f.flag = :cannot_delete if file.descendant_of? f
-          } unless file.flag == :cannot_delete
+        } unless file.flag == :cannot_delete
         next
       end
+    end
+
+    if file.socket? || file.pipe?
+      unless file.flag == :cannot_delete
+        if rm_f? || ask_for_fallback?(file)
+          begin
+            file.unlink
+          rescue => e
+            error file, e.class
+            list[idx..-1].each do |f|
+              f.flag = :cannot_delete if file.descendant_of? f
+            end
+          end
+        end
+        file.flag = :cannot_delete
+      end
+      next
     end
 
     unless has_confirmed || rm_f? || file.writable?

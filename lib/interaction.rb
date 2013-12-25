@@ -24,6 +24,11 @@ def ask_for_remove? file
   $stdin.gets.downcase.strip.start_with?('y')
 end
 
+def ask_for_fallback? file
+  ask "cannot move #{file.ftype} file #{file} to trash, delete it directly? "
+  $stdin.gets.downcase.strip.start_with?('y')
+end
+
 def ask_for_examine? dir
   ask "examine files in directory #{dir}? "
   $stdin.gets.downcase.strip.start_with?('y')
@@ -103,3 +108,25 @@ def send_mail name, email, subject, content
   stdin.puts content
   [stdin, stdout, stderr].each(&:close)
 end
+
+def rm_by_binary fork = true
+  rm = find_rm_from_path
+  if rm && fork
+    system ['rm', *ARGV].join(' ')
+  elsif rm
+    exec ['rm', *ARGV].join(' ')
+  else
+    $stderr.puts <<-EOF
+Can't find rm from $PATH
+$PATH: #{ENV['PATH'].inspect}
+    EOF
+    exit(-255) unless fork
+  end
+end
+
+private
+  def find_rm_from_path
+    path = `which rm`
+    return nil if path.empty?
+    path.strip
+  end

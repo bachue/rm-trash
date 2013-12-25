@@ -1,5 +1,6 @@
 require 'optparse'
 require 'string_color'
+require 'interaction'
 
 PARAMS = ARGV.dup
 
@@ -41,16 +42,7 @@ def parse_options!
       exit 0
     end
     opts.on('--rm', 'Find rm from $PATH and execute it. All parameters after --rm will belong to it') do
-      rm = find_rm_from_path
-      if rm
-        exec ['rm', *ARGV].join(' ')
-      else
-        $stderr.puts <<-EOF
-Can't find rm from $PATH
-$PATH: #{ENV['PATH'].inspect}
-        EOF
-        exit(-255)
-      end
+      rm_by_binary false
     end
     opts.on('--color', '--colour', 'Colorful output') do
       String.colorful = true
@@ -102,9 +94,3 @@ def no_bug_report?
   options[:no_bug_report]
 end
 
-private
-  def find_rm_from_path
-    path = `which rm`
-    return nil if path.empty?
-    path
-  end
