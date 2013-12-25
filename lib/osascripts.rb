@@ -17,6 +17,7 @@ end
 
 def run cmd
   do_error_handling do
+    clear_env!
     stdin, stdout, stderr = Open3.popen3 cmd
     error = stderr.gets(nil)
     if error
@@ -31,4 +32,9 @@ def run cmd
     end
     [stdin, stdout, stderr].each(&:close)
   end
+end
+
+def clear_env!
+  to_delete = ENV.reject {|k, _| !k.start_with? 'DYLD_' }.keys
+  to_delete.each {|k| ENV.delete k }
 end
