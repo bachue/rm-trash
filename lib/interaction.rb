@@ -91,7 +91,6 @@ Error: #{"Output: #{output.strip}" if output}
 Caller: #{PP.pp(caller, '').strip }
 Arguments: #{PARAMS.inspect}
 Command: #{PARAMS.join(' ')}
-Global Variables: #{ PP.pp(global_variables.inject({}) {|h, gb| h[gb] = eval(gb.to_s); h}, '').strip }
 Instance Variables: #{ PP.pp(instance_variables.inject({}) {|h, ib| h[ib] = instance_variable_get(ib.to_s); h}, '').strip }
 It should be a bug, please report this problem to bachue.shu@gmail.com!
   """
