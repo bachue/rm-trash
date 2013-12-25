@@ -1,5 +1,7 @@
 # Encoding: UTF-8
 
+$KCODE = 'u' unless RUBY_VERSION.to_f >= 1.9
+
 require 'rubygems'
 require 'bundler'
 require 'bundler/setup'
@@ -23,7 +25,7 @@ RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb --no-color --no-bug-repor
 
 def rm *args
   options = args.pop if args.last.is_a?(Hash)
-  args = args.flatten.map(&:inspect_u) if options && options[:inspect]
+  args = args.flatten.map(&:inspect) if options && options[:inspect]
   stdin, stdout, stderr = Open3.popen3 [RM, *args].join(' ')
   @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]

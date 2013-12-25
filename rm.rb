@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -W0
+#!/usr/bin/env ruby -W0 -KU
 $: << File.expand_path(File.dirname(__FILE__) + '/lib')
 
 require 'pp'

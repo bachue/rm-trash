@@ -194,12 +194,8 @@ class String
     escape_quote
   end
 
-  def inspect_u
-    %%"#{gsub('\\', '\\\\\\').gsub('"', '\"')}"%
-  end
-
   private
     def escape_quote
-      inspect_u.inspect_u.gsub(/^"\\"(.+)\\""$/, '\1')
+      inspect.inspect.gsub(/^"\\"(.+)\\""$/, '\1')
     end
 end
