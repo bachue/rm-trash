@@ -124,9 +124,13 @@ $PATH: #{ENV['PATH'].inspect}
   end
 end
 
-private
-  def find_rm_from_path
-    path = `which rm`
-    return nil if path.empty?
-    path.strip
-  end
+def find_rm_from_path
+  path = `which rm`
+  return nil if path.empty?
+
+  # Reject the possibility if the found rm is a link or rm-trash self
+  return nil if path.include?('rm: aliased to')
+  return nil if path.include?('rm-trash')
+
+  path.strip
+end

@@ -37,20 +37,22 @@ def parse_options!
                   'reflect an error.  The -f option overrides any previous -i options.') do
       options[:confirmation] = :never
     end
-    opts.on('-h', '--help', 'Display this help') do
+    opts.on('-h', '--help', 'Display this help.') do
       puts opts.to_s.split("\n").delete_if {|line| line =~ Regexp.union(internal_options) }.join("\n")
       exit 0
     end
-    opts.on('--rm', 'Find rm from $PATH and execute it. All parameters after --rm will belong to it') do
-      rm_by_binary false
+    if rm_path = find_rm_from_path
+      opts.on('--rm', "Attempt to remove the files by #{rm_path} instead.") do
+        rm_by_binary false
+      end
     end
-    opts.on('--color', '--colour', 'Colorful output') do
+    opts.on('--color', '--colour', 'Colorful output.') do
       String.colorful = true
     end
-    opts.on('--no-color', '--no-colour', 'White output') do
+    opts.on('--no-color', '--no-colour', 'Output only plain text.') do
       String.colorful = false
     end
-    opts.on('--no-bug-report', 'Stop report bug to developer via email') do
+    opts.on('--no-bug-report', 'Stop report bug to developer via email.') do
       # for internal only
       options[:no_bug_report] = true
     end

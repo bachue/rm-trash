@@ -27,17 +27,18 @@ Usage: rm [options] file...
     -r                               Equivalent to -R.
     -i                               Request confirmation before attempting to remove each file, regardless of the file's permissions, or whether or not the standard input device is a terminal.  The -i option overrides any previous -f options.
     -f                               Attempt to remove the files without prompting for confirmation, regardless of the file's permissions.  If the file does not exist, do not display a diagnostic message or modify the exit status to reflect an error.  The -f option overrides any previous -i options.
-    -h, --help                       Display this help
-        --rm                         Find rm from $PATH and execute it. All parameters after --rm will belong to it
-        --color, --colour            Colorful output
-        --no-color, --no-colour      White output
+    -h, --help                       Display this help.
+        --rm                         Attempt to remove the files by /bin/rm instead.
+        --color, --colour            Colorful output.
+        --no-color, --no-colour      Output only plain text.
 ```
 被`rm`删除后的文件可以在回收站中找到并且恢复
 
 ## 与`rm`的不同
 * 交互时默认会输出颜色，其中红色表示错误信息，黄色表示提问，白色表示普通的信息输出。这个功能可以通过`--color`或者`--colour`，`--no-color`或者`--no-colour`开启或关闭。
 * 实现了`--rm`选项，从Shell中得到原来系统自带的`rm`命令并执行。（_所以不能将本项目文件直接放进`$PATH`中去用，否则就变成递归调用了对不对啊_）
-* 在试图删除没有删除权限的文件时将跳出对话框要求输入密码，而不是直接显示`Permission Denied`
+* 在试图删除没有删除权限的文件时将跳出对话框要求输入密码，而不是直接显示`Permission Denied`。如果在一定时间内依然没有输入密码将显示`delete timeout`。
+* 对于UNIX的Socket文件和Pipe文件，`rm-trash`无法将这样的文件直接放入回收站中，此时将提示是否不经过回收站而直接删除。
 * 未能实现`-P`选项，因为一旦对文件写入后再删除，该文件将无法回复
 * 未能实现`-W`选项，因为被删除的文件就在回收站中，可以直接回复，无需命令行操作
 
