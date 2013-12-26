@@ -111,7 +111,7 @@ remove dir? y
 * Any Pull Request is Welcome
 
 ## License
-Copyright (c) 2012-2013 Bachue
+Copyright (c) 2012-2014 Bachue
 
 Released under the GPL v3 license:
 
