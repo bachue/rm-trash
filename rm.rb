@@ -110,6 +110,7 @@ def up list
         if rm_f? || ask_for_fallback?(file)
           begin
             file.unlink
+            puts file.bold if verbose?
           rescue => e
             error file, e.class
             list[idx..-1].each do |f|
