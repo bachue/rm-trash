@@ -107,18 +107,21 @@ def up list
 
     if file.socket? || file.pipe?
       unless file.flag == :cannot_delete
-        if rm_f? || ask_for_fallback?(file)
+        if rm_f? || do_fallback = ask_for_fallback?(file)
           begin
             file.unlink
             puts file.bold if verbose?
           rescue => e
             error file, e.class
-            list[idx..-1].each do |f|
-              f.flag = :cannot_delete if file.descendant_of? f
-            end
+            do_fallback = false
           end
         end
         file.flag = :cannot_delete
+        if do_fallback == false
+          list[idx+1..-1].each do |f|
+            f.flag = :cannot_delete if file.descendant_of? f
+          end
+        end
       end
       next
     end
