@@ -141,6 +141,22 @@ def create_special_files root = @tmpdir
   @files = [filename1, filename2]
 end
 
+def create_special_files_in_dir root = @tmpdir
+  @tmpdirs << root
+  @dir = root + '/dir'
+  FileUtils.mkdir_p @dir
+  filename1 = "#{@dir}/pipe_file"
+  File.mkfifo filename1
+  filename2 = "#{@dir}/socket_file"
+  UNIXServer.new filename2
+  @files = [filename1, filename2]
+end
+
+def create_special_files_in_dir_without_write_permission root = @tmpdir
+  create_special_files_in_dir
+  File.chmod 0555, @dir
+end
+
 def create_empty_dirs root = @tmpdir
   @tmpdirs << root
   @empty_dirs = ('a'..'b').map {|i|

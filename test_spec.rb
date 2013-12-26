@@ -193,32 +193,94 @@ describe 'test `rm -d`' do
 end
 
 describe 'test `rm -r`' do
-  before(:each) do
-    create_hierarchical_dirs
+  context 'doesn\'t include special files' do
+    before(:each) do
+      create_hierarchical_dirs
+    end
+
+    it 'can rm all files in a directory' do
+      @all_files = @hierachical_files.disorder
+      _, stdout, stderr = rm('-r', @all_files)
+      stdout.gets.should be_nil
+      stderr.gets.should be_nil
+      @all_files.each {|f| f.should_not be_existed }
+    end
+
+    it 'can rm all files in a directory which is end with "/"' do
+      @all_files = @hierachical_files.map {|f| File.directory?(f) ? f + '/' : f}.disorder
+      _, stdout, stderr = rm('-r', @all_files)
+      stdout.gets.should be_nil
+      stderr.gets.should be_nil
+      @all_files.each {|f| f.should_not be_existed }
+    end
+
+    it 'can print each files\' paths when rm all files in a directory' do
+      @all_files = @hierachical_files.disorder
+      _, stdout, stderr = rm('-rv', @all_files)
+      stderr.gets.should be_nil
+      @all_files_in_hierachical_dirs.flatten.each {|f| stdout =~ /#{f}\n/ }
+      @all_files.each {|f| f.should_not be_existed }
+    end
   end
 
-  it 'can rm all files in a directory' do
-    @all_files = @hierachical_files.disorder
-    _, stdout, stderr = rm('-r', @all_files)
-    stdout.gets.should be_nil
-    stderr.gets.should be_nil
-    @all_files.each {|f| f.should_not be_existed }
+  context 'include special files' do
+    before(:each) do
+      create_special_files_in_dir
+    end
+
+    it 'can rm all special files in a directory with permission' do
+      stdin, stdout, stderr = rm('-r', @dir)
+      stderr.gets('? ').should == "cannot move fifo file #{@files[0]} to trash, delete it directly? "
+      stdin.puts 'y'
+      stderr.gets('? ').should == "cannot move socket file #{@files[1]} to trash, delete it directly? "
+      stdin.puts 'y'
+      stdout.gets.should be_nil
+      @dir.should_not be_existed
+    end
+
+    it 'can rm all special files in a directory by force' do
+      stdin, stdout, stderr = rm('-rf', @dir)
+      stdout.gets.should be_nil
+      stderr.gets.should be_nil
+      @dir.should_not be_existed
+    end
+
+    it 'cannot rm special files without permission' do
+      stdin, stdout, stderr = rm('-r', @dir)
+      stderr.gets('? ').should == "cannot move fifo file #{@files[0]} to trash, delete it directly? "
+      stdin.puts 'n'
+      stderr.gets('? ').should == "cannot move socket file #{@files[1]} to trash, delete it directly? "
+      stdin.puts 'y'
+      stderr.gets.should == "rm: #{@dir}: Directory not empty\n"
+      stdout.gets.should be_nil
+      @files[0].should be_existed
+      @files[1].should_not be_existed
+      @dir.should be_existed
+    end
   end
 
-  it 'can rm all files in a directory which is end with "/"' do
-    @all_files = @hierachical_files.map {|f| File.directory?(f) ? f + '/' : f}.disorder
-    _, stdout, stderr = rm('-r', @all_files)
-    stdout.gets.should be_nil
-    stderr.gets.should be_nil
-    @all_files.each {|f| f.should_not be_existed }
-  end
+  context 'include special files without write permission' do
+    before(:each) do
+      create_special_files_in_dir_without_write_permission
+    end
 
-  it 'can print each files\' paths when rm all files in a directory' do
-    @all_files = @hierachical_files.disorder
-    _, stdout, stderr = rm('-rv', @all_files)
-    stderr.gets.should be_nil
-    @all_files_in_hierachical_dirs.flatten.each {|f| stdout =~ /#{f}\n/ }
-    @all_files.each {|f| f.should_not be_existed }
+    it 'cannot rm special files whatever with or without permission' do
+      stdin, stdout, stderr = rm('-r', @dir)
+      stderr.gets('? ').should == "cannot move fifo file #{@files[0]} to trash, delete it directly? "
+      stdin.puts 'n'
+      stderr.gets('? ').should == "cannot move socket file #{@files[1]} to trash, delete it directly? "
+      stdin.puts 'y'
+      stderr.gets.should == "rm: #{@files[1]}: Permission denied\n"
+      @files.each {|f| f.should be_existed }
+      @dir.should be_existed
+    end
+
+    it 'cannot rm special files even by force' do
+      stdin, stdout, stderr = rm('-rf', @dir)
+      @files.each {|f| stderr.gets.should == "rm: #{f}: Permission denied\n" }
+      @files.each {|f| f.should be_existed }
+      @dir.should be_existed
+    end
   end
 end
 
