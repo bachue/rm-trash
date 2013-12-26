@@ -72,7 +72,7 @@ def assert_valid? file
 end
 
 def error file, error
-  error = error.new.message if error.is_a?(Exception)
+  error = error.new.message if error.is_a?(Class)
   error = "rm: #{file}: #{error}"
   $stderr.puts error.red
   $retval = 1
