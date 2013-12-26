@@ -179,12 +179,37 @@ end
 class Array
   attr_accessor :flag # user defined flag
 
+  def from_root_to_leaves
+    @order = :from_root_to_leaves
+    self
+  end
+
+  def from_leaves_to_root
+    @order = :from_leaves_to_root
+    self
+  end
+
   def to_pathnames
     map {|ele| Pathname(ele) }
   end
 
   def to_pathnames!
     map! {|ele| Pathname(ele) }
+  end
+
+  def mark_ancestors_of current
+    range = case @order
+            when :from_root_to_leaves then 0..current
+            when :from_leaves_to_root then current..-1
+            else raise ArgumentError.new('order must be set before `mark_ancestors_of` was called')
+            end
+    self[range].each {|f|
+      f.flag = :cannot_delete if self[current].descendant_of? f
+    }
+  end
+
+  def reject_if_flag_is! flag
+    reject! {|e| e.flag == flag }
   end
 end
 

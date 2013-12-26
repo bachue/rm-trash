@@ -72,35 +72,31 @@ end
 # traverse from root to leaves
 def down list
   ignored_dir = nil
-  list.each_with_index do |file, idx|
+  list.from_root_to_leaves.each_with_index do |file, idx|
     if ignored_dir && file.descendant_of?(ignored_dir)
       file.flag = :delete
     elsif file.directory?
       if rm_i? && rm_r? && !ask_for_examine?(file) ||
          !rm_r? && !assert_no_children?(file)
         ignored_dir = file
+        list.mark_ancestors_of idx
         file.flag = :delete
-        list[0...idx].each {|f|
-          f.flag = :cannot_delete if file.descendant_of? f
-        }
       end
     end
   end
-  list.reject! {|file| file.flag == :delete }
+  list.reject_if_flag_is! :delete
 end
 
 # traverse from leaves to root
 def up list
-  list.each_with_index do |file, idx|
+  list.from_leaves_to_root.each_with_index do |file, idx|
     has_confirmed = false
     if rm_i?
       if ask_for_remove? file
         error file, Errno::ENOTEMPTY and next if file.flag == :cannot_delete
         has_confirmed = true
       else
-        list[idx..-1].each {|f|
-          f.flag = :cannot_delete if file.descendant_of? f
-        } unless file.flag == :cannot_delete
+        list.mark_ancestors_of idx unless file.flag == :cannot_delete
         next
       end
     end
@@ -116,12 +112,8 @@ def up list
             do_fallback = false
           end
         end
+        list.mark_ancestors_of idx if do_fallback == false
         file.flag = :cannot_delete
-        if do_fallback == false
-          list[idx+1..-1].each do |f|
-            f.flag = :cannot_delete if file.descendant_of? f
-          end
-        end
       end
       next
     end
@@ -131,9 +123,7 @@ def up list
         error file, Errno::ENOTEMPTY and next if file.flag == :cannot_delete
         next
       else
-        list[idx..-1].each {|f|
-          f.flag = :cannot_delete if file.descendant_of? f
-        } unless file.flag == :cannot_delete
+        list.mark_ancestors_of idx unless file.flag == :cannot_delete
         next
       end
     end
@@ -146,7 +136,7 @@ def up list
     end
   end
 
-  list.reject! {|file| file.flag == :cannot_delete }
+  list.reject_if_flag_is! :cannot_delete
 end
 
 # decompose file trees from candidates list
