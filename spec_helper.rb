@@ -134,10 +134,10 @@ end
 
 def create_special_files root = @tmpdir
   @tmpdirs << root
-  filename1 = "#{root}/socket_file"
-  UNIXServer.new filename1
-  filename2 = "#{root}/pipe_file"
-  File.mkfifo filename2
+  filename1 = "#{root}/pipe_file"
+  File.mkfifo filename1
+  filename2 = "#{root}/socket_file"
+  UNIXServer.new filename2
   @files = [filename1, filename2]
 end
 

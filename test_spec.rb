@@ -87,6 +87,26 @@ describe 'test `rm` files whose name' do
       stderr.gets.should be_nil
       @files.each {|f| f.should_not be_existed }
     end
+
+    it 'should delete all files with confirmation' do
+      stdin, stdout, stderr = rm(*@files)
+      stderr.gets('? ').should == "cannot move fifo file #{@files[0]} to trash, delete it directly? "
+      stdin.puts 'y'
+      stderr.gets('? ').should == "cannot move socket file #{@files[1]} to trash, delete it directly? "
+      stdin.puts 'y'
+      stdout.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
+
+    it 'should not delete files without confirmation' do
+      stdin, stdout, stderr = rm(*@files)
+      stderr.gets('? ').should == "cannot move fifo file #{@files[0]} to trash, delete it directly? "
+      stdin.puts 'n'
+      stderr.gets('? ').should == "cannot move socket file #{@files[1]} to trash, delete it directly? "
+      stdin.puts 'n'
+      stdout.gets.should be_nil
+      @files.each {|f| f.should be_existed }
+    end
   end
 end
 
