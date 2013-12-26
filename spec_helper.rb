@@ -9,6 +9,8 @@ require 'fileutils'
 require 'tmpdir'
 require 'timeout'
 require 'open3'
+require 'socket'
+require 'mkfifo'
 require 'highline/import'
 require 'set'
 require 'array_tree_order'
@@ -128,6 +130,15 @@ def create_files_with_non_ascii_chars_and_quote root = @tmpdir
     file = "#{root}/#{name}"
     FileUtils.touch file
   }.flatten
+end
+
+def create_special_files root = @tmpdir
+  @tmpdirs << root
+  filename1 = "#{root}/socket_file"
+  UNIXServer.new filename1
+  filename2 = "#{root}/pipe_file"
+  File.mkfifo filename2
+  @files = [filename1, filename2]
 end
 
 def create_empty_dirs root = @tmpdir

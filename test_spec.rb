@@ -75,37 +75,65 @@ describe 'test `rm` files whose name' do
       @files.each {|f| f.should_not be_existed }
     end
   end
+
+  context 'include special files' do
+    before(:each) do
+      create_special_files
+    end
+
+    it 'should delete all files' do
+      _, stdout, stderr = rm('-f', *@files)
+      stdout.gets.should be_nil
+      stderr.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
+  end
 end
 
 describe 'test `rm -v`' do
-  before(:each) do
-    create_files
+  context 'doesn\'t include special files' do
+    before(:each) do
+      create_files
+    end
+
+    it 'should delete all files' do
+      _, stdout, stderr = rm('-v', *@files)
+      @files.each {|f| stdout.gets.should == "#{f}\n" }
+      stderr.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
+
+    it 'should skip not existed files' do
+      @not_existed_files = @files.map {|f| f + '_' }
+      @all_files = (@files + @not_existed_files).disorder
+      _, stdout, stderr = rm('-v', *@all_files)
+      stdout = stdout.gets nil
+      stderr = stderr.gets nil
+      @files.each {|f| stdout.should =~ /#{f}\n/ }
+      @not_existed_files.each {|f| stderr.should =~ /rm: #{f}: No such file or directory\n/ }
+      @files.each {|f| f.should_not be_existed }
+    end
+
+    it 'cannot delete file if the parameter it end with "/"' do
+      @files_with_slash = @files.map {|f| f + '/' }
+      _, stdout, stderr = rm('-v', *@files_with_slash)
+      stdout.gets.should be_nil
+      @files_with_slash.each {|f| stderr.gets.should =~ /rm: #{f}: Not a directory\n/ }
+      @files.each {|f| f.should be_existed }
+    end
   end
 
-  it 'should delete all files' do
-    _, stdout, stderr = rm('-v', *@files)
-    @files.each {|f| stdout.gets.should == "#{f}\n" }
-    stderr.gets.should be_nil
-    @files.each {|f| f.should_not be_existed }
-  end
+  context 'include special files' do
+    before(:each) do
+      create_special_files
+    end
 
-  it 'should skip not existed files' do
-    @not_existed_files = @files.map {|f| f + '_' }
-    @all_files = (@files + @not_existed_files).disorder
-    _, stdout, stderr = rm('-v', *@all_files)
-    stdout = stdout.gets nil
-    stderr = stderr.gets nil
-    @files.each {|f| stdout.should =~ /#{f}\n/ }
-    @not_existed_files.each {|f| stderr.should =~ /rm: #{f}: No such file or directory\n/ }
-    @files.each {|f| f.should_not be_existed }
-  end
-
-  it 'cannot delete file if the parameter it end with "/"' do
-    @files_with_slash = @files.map {|f| f + '/' }
-    _, stdout, stderr = rm('-v', *@files_with_slash)
-    stdout.gets.should be_nil
-    @files_with_slash.each {|f| stderr.gets.should =~ /rm: #{f}: Not a directory\n/ }
-    @files.each {|f| f.should be_existed }
+    it 'should delete all files' do
+      _, stdout, stderr = rm('-vf', *@files)
+      @files.each {|f| stdout.gets.should == "#{f}\n" }
+      stderr.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
   end
 end
 
