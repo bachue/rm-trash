@@ -87,7 +87,7 @@ end
 def halt message
   message = unexpected_error_message(message)
   $stderr.puts message.red
-  send_mail 'Bachue', 'bachue.shu@gmail.com', '[rm-trash] error message', message
+  send_mail '[rm-trash] error message', message
   exit(-256)
 end
 
@@ -102,9 +102,10 @@ It should be a bug, please report this problem to bachue.shu@gmail.com!
   """
 end
 
-def send_mail name, email, subject, content
+MAIL_ADDR = 'bachue.shu@gmail.com'
+def send_mail subject, content
   return if no_bug_report?
-  stdin, stdout, stderr = Open3.popen3 "mail -s '#{subject.gsub("'", '"')}' bachue.shu@gmail.com"
+  stdin, stdout, stderr = Open3.popen3 "mail -s '#{subject.gsub("'", '"')}' #{MAIL_ADDR}"
   stdin.puts content
   [stdin, stdout, stderr].each(&:close)
 end

@@ -6,7 +6,7 @@ PARAMS = ARGV.dup
 
 def parse_options!
   options = { :confirmation => :default }
-  internal_options = ['--no-bug-report'].freeze
+  internal_options = ['--no-bug-report', '--no-auto-update'].freeze
 
   parser = OptionParser.new do |opts|
     opts.banner = 'Usage: rm [options] file...'
@@ -56,6 +56,9 @@ def parse_options!
       # for internal only
       options[:no_bug_report] = true
     end
+    opts.on('--no-auto-update', 'Don\'t check new version.') do
+      options[:no_auto_update] = true
+    end
   end
   parser.parse! rescue nil # don't raise exception if wrong arg is given
   parser.parse! ['--help'] if ARGV.empty?
@@ -96,3 +99,6 @@ def no_bug_report?
   options[:no_bug_report]
 end
 
+def no_auto_update?
+  options[:no_auto_update]
+end

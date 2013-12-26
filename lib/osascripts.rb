@@ -27,7 +27,7 @@ def run cmd
       else
         message = unexpected_error_message("#{error} from `#{cmd}'")
         $stderr.puts message.red
-        send_mail 'Bachue', 'bachue.shu@gmail.com', '[rm-trash] error message', message
+        send_mail '[rm-trash] apple script error', message
       end
     end
     [stdin, stdout, stderr].each(&:close)

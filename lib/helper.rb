@@ -177,6 +177,7 @@ class Pathname
 end
 
 class Array
+  include Comparable
   attr_accessor :flag # user defined flag
 
   def from_root_to_leaves
@@ -217,6 +218,10 @@ class String
   # Convert 123""'456'""789 to 123\\\"\\\"'456'\\\"\\\"789
   def escape_as_filename
     escape_quote
+  end
+
+  def to_version
+    strip.split('.').map(&:to_i)
   end
 
   private

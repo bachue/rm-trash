@@ -9,10 +9,14 @@ require 'interaction'
 require 'array_tree_order'
 require 'string_color'
 require 'helper'
+require 'auto_update'
 
 $retval = 0
 
 def main files = []
+  AutoUpdate.start_checking!
+  at_exit { AutoUpdate.prompt_for_update }
+
   files = warn_if_any_current_or_parent_directory(files).to_pathnames!
 
   files.each do |file|
