@@ -27,10 +27,10 @@ class AutoUpdate
       unless no_auto_update? || prompted?
         if get_version && get_version > CURRENT_VERSION
           prompted!
-          STDERR.puts <<-PROMPT.bold.green
-There is a new version of rm-trash available. Some bug fixes included.
-We recommand you to pull updates from `https://gitcafe.com/bachue/rm-trash` and install.
-          PROMPT
+          STDERR.puts 'There is a new version of rm-trash available. Some bug fixes included.'.bold.green
+          STDERR.puts 'We recommand you to pull updates from '.bold.green <<
+                      'https://gitcafe.com/bachue/rm-trash'.bold.underline <<
+                      ' and install.'.bold.green
         end
       end
     end

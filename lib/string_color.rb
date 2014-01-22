@@ -42,4 +42,12 @@ class String
       self
     end
   end
+
+  def underline
+    if String.colorful
+      "\033[4m#{self}\033[0m"
+    else
+      self
+    end
+  end
 end
