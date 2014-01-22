@@ -511,6 +511,32 @@ describe 'test `rm -i`' do
     end
   end
 
+  context 'to delete files with continuous names in a directory' do
+    before(:each) do
+      create_files_with_continuous_names
+    end
+
+    it 'can rm all files with confirmation' do
+      stdin, stdout, stderr = rm('-irv', @dir)
+      stderr.gets('? ').should == "examine files in directory #{@dir}? "
+      stdin.puts 'y'
+      stderr.gets('? ').should == "remove #{@files[0]}? "
+      stdin.puts 'n'
+      stderr.gets('? ').should == "remove #{@files[1]}? "
+      stdin.puts 'y'
+      stderr.gets('? ').should == "remove #{@files[2]}? "
+      stdin.puts 'n'
+      stderr.gets('? ').should == "remove #{@files[3]}? "
+      stdin.puts 'y'
+      stderr.gets('? ').should == "remove #{@dir}? "
+      stdin.puts 'y'
+      stderr.gets.should == "rm: #{@dir}: Directory not empty\n"
+      [@files[1], @files[3]].each {|f| stdout.gets.should == "#{f}\n" }
+      [@files[1], @files[3]].each {|f| f.should_not be_existed }
+      [@files[0], @files[2], @dir].each {|f| f.should be_existed }
+    end
+  end
+
   context 'to delete hierarchical directories with confirmation' do
     before(:each) do
       create_hierarchical_dirs

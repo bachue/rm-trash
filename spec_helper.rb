@@ -211,6 +211,17 @@ def create_hierarchical_dirs root = @tmpdir
   }
 end
 
+def create_files_with_continuous_names root = @tmpdir
+  @tmpdirs << root
+  @dir = FileUtils.mkdir("#{root}/dir")[0]
+  @files = []
+  @files.concat FileUtils.touch("#{@dir}/file_1")
+  @files.concat FileUtils.touch("#{@dir}/file_12")
+  @files.concat FileUtils.touch("#{@dir}/file_123")
+  @files.concat FileUtils.touch("#{@dir}/file_1234")
+  @files.tree_order
+end
+
 def create_symbolic_links_to_files root = @tmpdir
   @tmpdirs << root
   create_files root

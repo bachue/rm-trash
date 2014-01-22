@@ -115,7 +115,9 @@ class Pathname
   end
 
   def descendant_of? path
-    to_s.start_with? path.to_s
+    left_parents = expand_path_without_follow_symlink.filenames
+    right_parents = path.expand_path_without_follow_symlink.filenames
+    left_parents.take(right_parents.size) == right_parents
   end
 
   # Color Support
