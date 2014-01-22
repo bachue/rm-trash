@@ -330,6 +330,17 @@ describe 'to delete symbolic links' do
       @links_to_dirs.each {|f| f.should be_existed }
       @non_empty_dirs.each {|f| f.should_not be_existed }
     end
+
+    it 'can delete a symbolic link and subfiles in the directories the links point to' do
+      @params = @links_to_dirs.map {|f| f + '/'}
+      @output_files = @params.map {|f| Pathname(f).descend_tree.map(&:to_s) }.flatten
+      _, stdout, stderr = rm('-vr', *[@params + @non_empty_dirs + @all_files_in_non_empty_dirs])
+      stderr.gets.should be_nil
+      @output_files.each {|f| stdout.gets.should == "#{f}\n" }
+      @links_to_dirs.each {|f| f.should be_existed }
+      @non_empty_dirs.each {|f| f.should_not be_existed }
+      @all_files_in_non_empty_dirs.each {|f| f.should_not be_existed }
+    end
   end
 
   context 'to delete broken symbolic links' do

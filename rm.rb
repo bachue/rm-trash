@@ -6,7 +6,6 @@ require 'pathname'
 require 'osascripts'
 require 'option_parser'
 require 'interaction'
-require 'array_tree_order'
 require 'string_color'
 require 'helper'
 require 'auto_update'
@@ -19,7 +18,7 @@ def main files = []
 
   files = warn_if_any_current_or_parent_directory(files).to_pathnames!
 
-  files.each do |file|
+  all_trees = files.map do |file|
     if assert_existed? file
       if file.to_s.end_with? '/'
         if file.symlink?
@@ -40,11 +39,11 @@ def main files = []
       up list
       next if list.empty?
 
-      trees = decompose_trees list.tree_order(true).reverse
-      rm_all! trees.map {|tree| tree.keys[0].expand_path }
-      print_files trees
+      decompose_trees list.tree_order(true).reverse
     end
-  end
+  end.compact.flatten
+  rm_all! all_trees.map {|tree| tree.keys[0].expand_path }
+  print_files all_trees
 end
 
 # generate candidates list

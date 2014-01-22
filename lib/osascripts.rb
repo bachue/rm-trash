@@ -9,7 +9,7 @@ def rm_all! files
   run <<-CMD
     osascript -e "
       tell app \\\"Finder\\\"
-        #{files.map {|file| "delete POSIX file \\\"#{file.to_s.escape_as_filename}\\\"" }.join("\n")}
+        #{files.map {|file| "if exists POSIX file \\\"#{file.to_s.escape_as_filename}\\\" then delete POSIX file \\\"#{file.to_s.escape_as_filename}\\\"" }.join("\n")}
       end tell
     "
   CMD
