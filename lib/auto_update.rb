@@ -37,7 +37,7 @@ We recommand you to pull updates from `https://gitcafe.com/bachue/rm-trash` and 
 
     private
       def lock_for_update!
-        update_lock.open 'w'
+        update_lock.open('w') {}
       end
 
       def update_locked?
