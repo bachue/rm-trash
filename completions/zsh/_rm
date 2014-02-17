@@ -1,0 +1,30 @@
+#compdef rm
+
+local arguments origin_rm
+
+if [ -x '/bin/rm' ]; then
+    origin_rm='/bin/rm'
+elif [ -x '/usr/bin/rm' ]; then
+    origin_rm='/usr/bin/rm'
+fi
+
+arguments=(
+    '-v[Be verbose when deleting files, showing them as they are removed.]'
+    '(-R -r)-d[Attempt to remove directories as well as other types of files.]'
+    "(-r -d)-R[Attempt to remove the file hierarchy rooted in each file argument.  The -R option implies the -d option. If the -i option is specified, the user is prompted for confirmation before each directory's contents are processed (as well as before the attempt is made to remove the directory).  If the user does not respond affirmatively, the file hierarchy rooted in that directory is skipped.]"
+    '(-R -d)-r[Equivalent to -R.]'
+    "(-f)-i[Request confirmation before attempting to remove each file, regardless of the file's permissions, or whether or not the standard input device is a terminal.  The -i option overrides any previous -f options.]"
+    "(-i)-f[Attempt to remove the files without prompting for confirmation, regardless of the file's permissions.  If the file does not exist, do not display a diagnostic message or modify the exit status to reflect an error.  The -f option overrides any previous -i options.]"
+    ''{-h,--help}'[Display this help.]'
+    '(--no-color --no-colour --color --colour)'{--color,--colour}'[Colorful output.]'
+    '(--no-color --no-colour --color --colour)'{--no-color,--no-colour}'[output only plain text.]'
+    '*:files:_files'
+)
+
+if [ -n "$origin_rm" ]; then
+    arguments+=(
+        "--rm[Attempt to remove the files by $origin_rm instead]"
+    )
+fi
+
+_arguments -s $arguments
