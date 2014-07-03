@@ -45,9 +45,9 @@ Usage: rm [options] file...
 
 ## 依赖
 * Ruby
-    * 1.8.7 系统默认内置
+    * 1.8.7
     * 1.9.3
-    * 2.0.0
+    * 2.0.0 系统默认内置
     * 2.1.0
 
 ## 如何更新
@@ -56,51 +56,6 @@ Usage: rm [options] file...
 更新方法如下：
 1. 如果之前用户是直接下载源代码压缩包来安装本工具的话，则请重新下载一次源代码压缩包，解压缩并且覆盖之前安装的文件。
 2. 如果之前用户使用Git下载源代码来安装本工具的话，则请执行`git pull origin master`命令即可自动更新源代码。
-
-## 已知 Bug
-* 交互式递归删除文件时(即`rm -ir`)递归顺序略有差异
-
-本程序：
-
-```
-examine files in directory dir? y
-examine files in directory dir/1? y
-examine files in directory dir/2? y
-remove dir/1/1? y
-remove dir/1/2? y
-remove dir/1? y
-remove dir/2/1? y
-remove dir/2/2? y
-remove dir/2? y
-remove dir? y
-```
-
-内置：
-
-```
-examine files in directory dir? y
-examine files in directory dir/1? y
-remove dir/1/1? y
-remove dir/1/2? y
-remove dir/1? y
-examine files in directory dir/2? y
-remove dir/2/1? y
-remove dir/2/2? y
-remove dir/2? y
-remove dir? y
-```
-
-* 在交互式时删除空文件夹时(即`rm -id`)，对于非空文件夹的表现略有差异
-    * 本程序在这种情况下将直接显示`Directory not empty`错误
-    * 系统内置的`rm`在这种情况下依然会询问用户是否删除，在用户确认删除后再显示出`Directory not empty`错误
-
-## Bug 报告
-* 登陆 `GitCafe`
-* 访问 <https://gitcafe.com/bachue/rm-trash/tickets>
-* 点击 `New Ticket` 按钮
-* 将执行的命令，输出的错误信息写入，建议使用Markdown格式并注意排版
-* 点击 `Create` 按钮即可创建
-* 或是直接发送邮件到 <bachue.shu@gmail.com>
 
 ## Contributing
 * Fork it from `git@gitcafe.com:bachue/rm-trash.git`
