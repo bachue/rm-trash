@@ -6,32 +6,38 @@ require 'string_color'
 # To call AppleScript to delete a list of file
 # file param must be absolute path
 def rm_all! files
-  run <<-CMD
-    osascript -e "
-      tell app \\\"Finder\\\"
-        #{files.map {|file| "if exists POSIX file \\\"#{file.to_s.escape_as_filename}\\\" then delete POSIX file \\\"#{file.to_s.escape_as_filename}\\\"" }.join("\n")}
-      end tell
-    "
-  CMD
+  run_apple_script <<-SCRIPT unless files.empty?
+    tell app "Finder"
+      #{files.map {|file|
+        %[if exists POSIX file "#{file.to_s.escape_quote}" then delete POSIX file "#{file.to_s.escape_quote}"]
+      }.join("\n")}
+    end tell
+  SCRIPT
 end
 
-def run cmd
+def run_apple_script script
   do_error_handling do
     clear_env!
-    stdin, stdout, stderr = Open3.popen3 cmd
-    error = stderr.gets(nil)
-    if error
-      $retval = 1
-      if error.include?('Finder got an error: AppleEvent timed out')
-        $stderr.puts 'rm: delete timeout'.red
-      else
-        message = unexpected_error_message("#{error} from `#{cmd}'")
-        $stderr.puts message.red
-        send_mail '[rm-trash] apple script error', message
+    Open3.popen3 'osascript', '-e', script do |stdin, stdout, stderr, thread|
+      error = stderr.gets nil
+      if error
+        $retval = 1
+        if error.include?('Finder got an error: AppleEvent timed out')
+          $stderr.puts 'rm: delete timeout'.red
+        else
+          error! "#{error} from apple script `#{script}'"
+        end
+      elsif thread && thread.value.to_i.nonzero?
+        error! "unknown error from apple script `#{script}'"
       end
     end
-    [stdin, stdout, stderr].each(&:close)
   end
+end
+
+def error! message
+  message = unexpected_error_message message
+  $stderr.puts message.red
+  send_mail '[rm-trash] apple script error', message
 end
 
 def clear_env!

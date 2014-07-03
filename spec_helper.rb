@@ -22,12 +22,11 @@ ENV['BUNDLE_GEMFILE'] = File.expand_path(File.dirname(__FILE__)) + '/Gemfile'
 Bundler.require :test
 HighLine.color_scheme = HighLine::SampleColorScheme.new
 
-RM = File.expand_path(File.dirname(__FILE__) + '/rm.rb --no-color --no-bug-report --no-auto-update')
+RM = [File.expand_path(File.dirname(__FILE__) + '/rm.rb'), '--no-color', '--no-bug-report', '--no-auto-update']
 
 def rm *args
-  options = args.pop if args.last.is_a?(Hash)
-  args = args.flatten.map(&:inspect) if options && options[:inspect]
-  stdin, stdout, stderr = Open3.popen3 [RM, *args].join(' ')
+  args = RM + args.flatten
+  stdin, stdout, stderr = Open3.popen3(*args)
   @io.concat [stdin, stdout, stderr]
   [stdin, stdout, stderr]
 end
@@ -83,6 +82,10 @@ class Array
   def disorder
     sort {rand * 2 - 1}
   end
+
+  def insert_wherever element
+    dup.insert rand(size + 1), element
+  end
 end
 
 class Object
@@ -125,7 +128,7 @@ end
 
 def create_files_with_non_ascii_chars_and_quote root = @tmpdir
   @tmpdirs << root
-  @files = ['我的"文档"！'].map {|name|
+  @files = ['`我的"文档"！{', '!@$%^&*()_+-={}[]\;\':".,<?>`~'].map {|name|
     file = "#{root}/#{name}"
     FileUtils.touch file
   }.flatten
