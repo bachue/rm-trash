@@ -105,9 +105,9 @@ end
 MAIL_ADDR = 'bachue.shu@gmail.com'
 def send_mail subject, content
   return if no_bug_report?
-  stdin, stdout, stderr = Open3.popen3 "mail -s '#{subject.gsub("'", '"')}' #{MAIL_ADDR}"
-  stdin.puts content
-  [stdin, stdout, stderr].each(&:close)
+  Open3.popen3 'mail', '-s', subject, MAIL_ADDR do |stdin|
+    stdin.puts content
+  end
 end
 
 def rm_by_binary fork = true
