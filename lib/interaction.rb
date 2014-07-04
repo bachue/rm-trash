@@ -97,6 +97,9 @@ Error: #{"Output: #{output.strip}" if output}
 Caller: #{PP.pp(caller, '').strip }
 Arguments: #{PARAMS.inspect}
 Command: #{PARAMS.join(' ')}
+Ruby: #{RUBY_DESCRIPTION}
+OSX: #{`sw_vers -productVersion`.strip}
+Machine: #{`uname -a`.strip}
 Instance Variables: #{ PP.pp(instance_variables.inject({}) {|h, ib| h[ib] = instance_variable_get(ib.to_s); h}, '').strip }
 It should be a bug, please report this problem to bachue.shu@gmail.com!
   """
@@ -105,7 +108,7 @@ end
 MAIL_ADDR = 'bachue.shu@gmail.com'
 def send_mail subject, content
   return if no_bug_report?
-  Open3.popen3 'mail', '-s', subject, MAIL_ADDR do |stdin|
+  Open3.popen3 'mail', '-s', subject, MAIL_ADDR do |stdin, _, _|
     stdin.puts content
   end
 end
