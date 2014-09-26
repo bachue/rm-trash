@@ -5,13 +5,14 @@ require 'fileutils'
 require 'helper'
 require 'open-uri'
 
+CURRENT_VERSION = File.read(File.dirname(__FILE__) + '/../version').to_version
+
 class AutoUpdate
   class << self
-    CURRENT_VERSION = File.read(File.dirname(__FILE__) + '/../version').to_version
-    ROOT_PATH = '/tmp/.rm_trash'.freeze
-    UPDATE_LOCK_PATH = (ROOT_PATH + '/update.lock').freeze
-    VERSION_FILE_PATH = (ROOT_PATH + '/version').freeze
-    PROMPTED_FILE_PATH = (ROOT_PATH + '/prompted').freeze
+    VERSION_INFO_PATH = '/tmp/.rm_trash'.freeze
+    UPDATE_LOCK_PATH = (VERSION_INFO_PATH + '/update.lock').freeze
+    VERSION_FILE_PATH = (VERSION_INFO_PATH + '/version').freeze
+    PROMPTED_FILE_PATH = (VERSION_INFO_PATH + '/prompted').freeze
     URL = URI('https://gitcafe.com/bachue/rm-trash/raw/master/version').freeze
 
     def start_checking!
@@ -46,7 +47,7 @@ class AutoUpdate
 
       def update_lock
         @_update_lock ||= begin
-          FileUtils.mkdir_p ROOT_PATH
+          FileUtils.mkdir_p VERSION_INFO_PATH
           Pathname.new UPDATE_LOCK_PATH
         end
       end
@@ -61,7 +62,7 @@ class AutoUpdate
 
       def version_file
         @_version_file ||= begin
-          FileUtils.mkdir_p ROOT_PATH
+          FileUtils.mkdir_p VERSION_INFO_PATH
           Pathname.new VERSION_FILE_PATH
         end
       end
@@ -76,7 +77,7 @@ class AutoUpdate
 
       def prompted_file
         @_prompted_file ||= begin
-          FileUtils.mkdir_p ROOT_PATH
+          FileUtils.mkdir_p VERSION_INFO_PATH
           Pathname.new PROMPTED_FILE_PATH
         end
       end

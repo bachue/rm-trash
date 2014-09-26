@@ -1,6 +1,7 @@
 require 'optparse'
 require 'string_color'
 require 'interaction'
+require 'auto_update'
 
 PARAMS = ARGV.dup
 
@@ -37,8 +38,12 @@ def parse_options!
                   'reflect an error.  The -f option overrides any previous -i options.') do
       options[:confirmation] = :never
     end
-    opts.on('-h', '--help', 'Display this help.') do
+    opts.on_tail('-h', '--help', 'Display this help.') do
       puts opts.to_s.split("\n").delete_if {|line| line =~ Regexp.union(internal_options) }.join("\n")
+      exit 0
+    end
+    opts.on_tail('--version', 'Show version.') do
+      puts CURRENT_VERSION.join('.')
       exit 0
     end
     if rm_path = find_rm_from_path
