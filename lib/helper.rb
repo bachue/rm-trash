@@ -64,6 +64,18 @@ class Pathname
   end
   alias_method_chain :readlink, :chomp
 
+  # Fix the issue that escape_path will crush when filename starts with ~
+  def expand_path_with_escape_wave
+    if @path.start_with? '~'
+      tmp = @path
+      @path = "./#{tmp}"
+    end
+    expand_path_without_escape_wave
+  ensure
+    @path = tmp if tmp
+  end
+  alias_method_chain :expand_path, :escape_wave
+
   def expand_path_with_follow_symlink
     if @follow_symlink
       readlink_with_chomp.expand_path_without_follow_symlink

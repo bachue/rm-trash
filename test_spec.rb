@@ -155,6 +155,19 @@ describe 'test `rm -v`' do
       @files.each {|f| f.should_not be_existed }
     end
   end
+
+  context 'start with ~' do
+    before(:each) do
+      create_files_started_with_wave
+    end
+
+    it 'should delete all files' do
+      _, stdout, stderr = Dir.chdir(@tmpdir) { rm '-v', @files }
+      @files.each {|f| stdout.gets.should == "#{f}\n" }
+      stderr.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
+  end
 end
 
 describe 'test `rm -d`' do

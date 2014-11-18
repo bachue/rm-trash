@@ -134,6 +134,15 @@ def create_files_with_non_ascii_chars_and_quote root = @tmpdir
   }.flatten
 end
 
+def create_files_started_with_wave root = @tmpdir
+  @tmpdirs << root
+  @files = ['~$商业化运营案例（严禁外发）.xlsx'].map {|name|
+    file = "#{root}/#{name}"
+    FileUtils.touch file
+    name
+  }.flatten
+end
+
 def create_special_files root = @tmpdir
   @tmpdirs << root
   filename1 = "#{root}/pipe_file"

@@ -12,6 +12,8 @@ require 'auto_update'
 
 $retval = 0
 
+Signal.trap('INT') { exit! }
+
 def main files = []
   AutoUpdate.start_checking!
   at_exit { AutoUpdate.prompt_for_update }

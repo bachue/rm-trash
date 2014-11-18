@@ -5,7 +5,7 @@ require 'string_color'
 
 # To call AppleScript to delete a list of file
 # file param must be absolute path
-def rm_all! files
+def rm_all files
   run_apple_script <<-SCRIPT unless files.empty?
     tell app "Finder"
       #{files.map {|file|
@@ -13,6 +13,15 @@ def rm_all! files
       }.join("\n")}
     end tell
   SCRIPT
+end
+
+def rm_all! files
+  if files.size <= 1000
+    rm_all files
+  else
+    files = files.dup
+    rm_all files.shift 1000 until files.empty?
+  end
 end
 
 def run_apple_script script
