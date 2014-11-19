@@ -6,7 +6,8 @@ def warn_if_any_current_or_parent_directory paths
   result = []
   err = false
   paths.each do |path|
-    if /(^|\/)\.{1,2}$/ =~ path
+    if path == '.' || path.end_with?('/.') ||
+       path == '..' || path.end_with?('/..')
       unless err
         $stderr.puts 'rm: "." and ".." may not be removed'
         $retval = 1
@@ -65,7 +66,7 @@ def assert_no_children? dir
 end
 
 def assert_valid? file
-  if ret = /(^|\/)\.\/$/ =~ file
+  if ret = file.to_s == './' || file.end_with?('/./')
     error file, Errno::EINVAL
   end
   !ret
