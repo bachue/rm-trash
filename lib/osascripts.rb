@@ -16,11 +16,16 @@ def rm_all files
 end
 
 def rm_all! files
-  if files.size <= 1000
+  return if files.empty?
+  processes = Math.sqrt(files.size).ceil
+  partition = (files.size.to_f / processes).ceil
+  tasks = processes.times.map {|i| files[partition*i...partition*(i+1)] }
+
+  if tasks.size == 1
     rm_all files
   else
-    files = files.dup
-    rm_all files.shift 1000 until files.empty?
+    $children = tasks.map { |task| fork { rm_all task } }
+    Process.waitall
   end
 end
 
