@@ -48,11 +48,16 @@ class Pathname
   end
   alias_method_chain :writable?, :follow_symlink
 
+  def exist_with_cache?
+    cache(:exist?)[@path] ||= exist_without_cache?
+  end
+  alias_method_chain :exist?, :cache
+
   def exist_with_chomp?
     Pathname(to_s.chomp('/')).exist_without_chomp?
   end
   alias_method_chain :exist?, :chomp
-  alias_method :exists?, :exist_with_chomp?
+  alias_method :exists?, :exist?
 
   def symlink_with_chomp?
     Pathname(to_s.chomp('/')).symlink_without_chomp?
@@ -63,6 +68,16 @@ class Pathname
     Pathname(to_s.chomp('/')).readlink_without_chomp
   end
   alias_method_chain :readlink, :chomp
+
+  def directory_with_cache?
+    cache(:directory?)[@path] ||= directory_without_cache?
+  end
+  alias_method_chain :directory?, :cache
+
+  def expand_path_with_cache
+    cache(:expand_path)[@path] ||= expand_path_without_cache
+  end
+  alias_method_chain :expand_path, :cache
 
   # Fix the issue that escape_path will crush when filename starts with ~
   def expand_path_with_escape_wave
@@ -86,9 +101,11 @@ class Pathname
   alias_method_chain :expand_path, :follow_symlink
 
   def filenames
-    filenames = []
-    each_filename {|filename| filenames << filename }
-    filenames
+    cache(:filenames)[@path] ||= begin
+      filenames = []
+      each_filename {|filename| filenames << filename }
+      filenames
+    end
   end
 
   def has_children?
@@ -150,7 +167,17 @@ class Pathname
     end
   end
 
+  class << self
+    def cache
+      @cache ||= Hash.new {|h, k| h[k] = {} }
+    end
+  end
+
   private
+    def cache cls
+      self.class.cache[cls]
+    end
+
     # direction: :ascend, :descend
     def tree direction, include_self
       descendants = Dir["#{to_s}/**/**"].to_pathnames
