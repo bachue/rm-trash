@@ -21,12 +21,12 @@ def rm_all! files
   partition = (files.size.to_f / processes).ceil
   tasks = processes.times.map {|i| files[partition*i...partition*(i+1)] }
 
-  if tasks.size == 1
-    rm_all files
-  else
-    $children = tasks.map { |task| fork { rm_all task } }
-    Process.waitall
-  end
+  mytask = tasks.pop
+  $children = tasks.map { |task| fork { rm_all task } }
+  rm_all mytask # do this task by itself
+
+  Process.waitall
+  $children.clear
 end
 
 def run_apple_script script
