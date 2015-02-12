@@ -107,7 +107,7 @@ def up list
       end
     end
 
-    if file.socket? || file.pipe?
+    if file.socket? || file.pipe? || file.already_trashed?
       unless file.flag == :cannot_delete
         if rm_f? || do_fallback = ask_for_fallback?(file)
           begin

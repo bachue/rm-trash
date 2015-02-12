@@ -3,7 +3,7 @@ $: << File.expand_path(File.dirname(__FILE__) + '/lib')
 require 'spec_helper'
 
 describe 'test `rm`' do
-  before(:each) do
+  before :each do
     create_files
     create_empty_dirs
   end
@@ -38,7 +38,7 @@ end
 
 describe 'test `rm` files whose name' do
   context 'include quotes' do
-    before(:each) do
+    before :each do
       create_files_with_quote
     end
 
@@ -51,7 +51,7 @@ describe 'test `rm` files whose name' do
   end
 
   context 'include non-ascii chars' do
-    before(:each) do
+    before :each do
       create_files_with_non_ascii_chars
     end
 
@@ -64,7 +64,7 @@ describe 'test `rm` files whose name' do
   end
 
   context 'include non-ascii chars and quotes' do
-    before(:each) do
+    before :each do
      create_files_with_non_ascii_chars_and_quote
     end
 
@@ -77,7 +77,7 @@ describe 'test `rm` files whose name' do
   end
 
   context 'include special files' do
-    before(:each) do
+    before :each do
       create_special_files
     end
 
@@ -108,11 +108,44 @@ describe 'test `rm` files whose name' do
       @files.each {|f| f.should be_existed }
     end
   end
+
+  context 'include trashed files' do
+    before :each do
+      create_trashed_files
+    end
+
+    it 'should delete all trashed files' do
+      _, stdout, stderr = rm '-f', @files
+      stdout.gets.should be_nil
+      stderr.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
+
+    it 'should delete all trashed files with confirmation' do
+      stdin, stdout, stderr = rm @files
+      stderr.gets('? ').should == "cannot move trashed file #{@files[0]} to trash, delete it directly? "
+      stdin.puts 'y'
+      stderr.gets('? ').should == "cannot move trashed file #{@files[1]} to trash, delete it directly? "
+      stdin.puts 'y'
+      stdout.gets.should be_nil
+      @files.each {|f| f.should_not be_existed }
+    end
+
+    it 'should not delete trashed files without confirmation' do
+      stdin, stdout, stderr = rm @files
+      stderr.gets('? ').should == "cannot move trashed file #{@files[0]} to trash, delete it directly? "
+      stdin.puts 'n'
+      stderr.gets('? ').should == "cannot move trashed file #{@files[1]} to trash, delete it directly? "
+      stdin.puts 'n'
+      stdout.gets.should be_nil
+      @files.each {|f| f.should be_existed }
+    end
+  end
 end
 
 describe 'test `rm -v`' do
   context 'doesn\'t include special files' do
-    before(:each) do
+    before :each do
       create_files
     end
 
@@ -144,7 +177,7 @@ describe 'test `rm -v`' do
   end
 
   context 'include special files' do
-    before(:each) do
+    before :each do
       create_special_files
     end
 
@@ -157,7 +190,7 @@ describe 'test `rm -v`' do
   end
 
   context 'start with ~' do
-    before(:each) do
+    before :each do
       create_files_started_with_wave
     end
 
@@ -171,7 +204,7 @@ describe 'test `rm -v`' do
 end
 
 describe 'test `rm -d`' do
-  before(:each) do
+  before :each do
     create_files
     create_empty_dirs
     create_non_empty_dirs
@@ -207,7 +240,7 @@ end
 
 describe 'test `rm -r`' do
   context 'doesn\'t include special files' do
-    before(:each) do
+    before :each do
       create_hierarchical_dirs
     end
 
@@ -237,7 +270,7 @@ describe 'test `rm -r`' do
   end
 
   context 'include special files' do
-    before(:each) do
+    before :each do
       create_special_files_in_dir
     end
 
@@ -273,7 +306,7 @@ describe 'test `rm -r`' do
   end
 
   context 'include special files without write permission' do
-    before(:each) do
+    before :each do
       create_special_files_in_dir_without_write_permission
     end
 
@@ -299,7 +332,7 @@ end
 
 describe 'to delete symbolic links' do
   context 'to delete symbolic links to files' do
-    before(:each) do
+    before :each do
       create_symbolic_links_to_files
     end
 
@@ -322,7 +355,7 @@ describe 'to delete symbolic links' do
   end
 
   context 'to delete symbolic links to directories' do
-    before(:each) do
+    before :each do
       create_symbolic_links_to_dirs
     end
 
@@ -357,7 +390,7 @@ describe 'to delete symbolic links' do
   end
 
   context 'to delete broken symbolic links' do
-    before(:each) do
+    before :each do
       create_broken_symbolic_links
     end
 
@@ -378,7 +411,7 @@ describe 'to delete symbolic links' do
   end
 
   context 'to delete ring symbolic links' do
-    before(:each) do
+    before :each do
       create_ring_symbolic_links
     end
 
@@ -402,7 +435,7 @@ end
 
 describe 'test `rm -i`' do
   context 'to delete files with confirmation' do
-    before(:each) do
+    before :each do
       create_files
       create_empty_dirs
     end
@@ -452,7 +485,7 @@ describe 'test `rm -i`' do
   end
 
   context 'to be rejected to delete file from a deep node' do
-    before(:each) do
+    before :each do
       create_deep_directory_tree
     end
     it 'should be rejected to delete all its parent nodes' do
@@ -475,7 +508,7 @@ describe 'test `rm -i`' do
   end
 
   context 'to delete empty directories with confirmation' do
-    before(:each) do
+    before :each do
       create_files
       create_empty_dirs
       create_non_empty_dirs
@@ -536,7 +569,7 @@ describe 'test `rm -i`' do
   end
 
   context 'to delete files with continuous names in a directory' do
-    before(:each) do
+    before :each do
       create_files_with_continuous_names
     end
 
@@ -562,7 +595,7 @@ describe 'test `rm -i`' do
   end
 
   context 'to delete hierarchical directories with confirmation' do
-    before(:each) do
+    before :each do
       create_hierarchical_dirs
     end
 
@@ -595,7 +628,7 @@ describe 'test `rm -i`' do
   end
 
   context 'won\'t allow user to delete "." or ".."' do
-    before(:each) do
+    before :each do
       create_files
     end
 
@@ -645,7 +678,7 @@ describe 'test `rm -i`' do
   end
 
   context 'won\'t allow user to delete "/." or "/.."' do
-    before(:each) do
+    before :each do
       create_non_empty_dirs
     end
 
@@ -669,7 +702,7 @@ describe 'test `rm -i`' do
   end
 
   context 'still allow user to delete "../"' do
-    before(:each) do
+    before :each do
       create_non_empty_dirs
     end
 
@@ -701,7 +734,7 @@ describe 'test `rm -i`' do
   end
 
   context 'invalid argument when try to `rm ./`' do
-    before(:each) do
+    before :each do
       create_files
     end
 
@@ -716,7 +749,7 @@ describe 'test `rm -i`' do
   end
 
   context 'invalid argument when try to `rm brabrabra/./`' do
-    before(:each) do
+    before :each do
       create_non_empty_dirs
     end
 
@@ -735,7 +768,7 @@ end
 
 describe 'test `rm -f`' do
   context 'to delete files without permission and -f' do
-    before(:each) do
+    before :each do
       create_hierarchical_dirs_without_write_permission
     end
 
@@ -790,7 +823,7 @@ describe 'test `rm -f`' do
 end
 
 describe 'test `rm --rm`' do
-  before(:each) do
+  before :each do
     create_hierarchical_dirs
   end
 
@@ -804,7 +837,7 @@ describe 'test `rm --rm`' do
 end
 
 describe 'test when relational parameters' do
-  before(:each) do
+  before :each do
     create_deep_directory_tree
   end
 

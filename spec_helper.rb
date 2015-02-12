@@ -104,7 +104,7 @@ end
 
 def create_files root = @tmpdir
   @tmpdirs << root
-  @files = (1..2).map {|i|
+  @files = %w(1 2).map {|i|
     file = "#{root}/file_#{i}"
     FileUtils.touch file
   }.flatten
@@ -140,6 +140,13 @@ def create_files_started_with_wave root = @tmpdir
     file = "#{root}/#{name}"
     FileUtils.touch file
     name
+  }.flatten
+end
+
+def create_trashed_files
+  @files = %w(1 2).map {|name|
+    file = "#{ENV['HOME']}/.Trash/#{name}"
+    FileUtils.touch file
   }.flatten
 end
 
@@ -179,7 +186,7 @@ end
 def create_non_empty_dirs root = @tmpdir
   @tmpdirs << root
   @all_files_in_non_empty_dirs = []
-  @non_empty_dirs = ('a'..'b').map {|i|
+  @non_empty_dirs = %w(a b).map {|i|
     dir = "#{root}/non_empty_dir_#{i}"
     FileUtils.mkdir(dir).tap {|dirs|
       @all_files_in_non_empty_dirs.concat FileUtils.touch "#{dirs.first}/file"
@@ -189,7 +196,7 @@ end
 
 def create_deep_directory_tree root = @tmpdir
   @tmpdirs << root
-  dirs = ('a'..'c').to_a
+  dirs = %w(a b c).to_a
   FileUtils.mkdir_p root + '/' + dirs.join('/')
   @tree_root = root + '/a'
   @all_dirs = Pathname(@tree_root).ascend_tree.map(&:to_s)
@@ -198,14 +205,14 @@ end
 def create_hierarchical_dirs root = @tmpdir
   @tmpdirs << root
   @hierachical_files, @hierachical_dirs, @all_files_in_hierachical_dirs = [], [], [[], []]
-  ('a'..'b').each_with_index {|i0, i|
+  %w(a b).each_with_index {|i0, i|
     dir = "#{root}/hierachical_dir_#{i0}"
     FileUtils.mkdir(dir).tap {|dirs1|
-      ('a'..'b').each {|i1|
+      %w(a b).each {|i1|
         @all_files_in_hierachical_dirs[i].concat FileUtils.mkdir("#{dirs1.first}/dir_#{i1}").tap { |dirs2|
-          ('a'..'b').each {|i2|
+          %w(a b).each {|i2|
             @all_files_in_hierachical_dirs[i].concat FileUtils.mkdir("#{dirs2.first}/dir_#{i2}").tap { |dirs3|
-              ('a'..'b').each {|i3|
+              %w(a b).each {|i3|
                 @all_files_in_hierachical_dirs[i].concat FileUtils.touch("#{dirs3.first}/file_#{i3}")
               }
             }

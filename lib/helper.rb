@@ -7,6 +7,15 @@ class Pathname
   attr_accessor :flag # user defined flag
   alias_method :to_str, :to_s # to be compatible with RUBY1.9+
 
+  def ftype_with_trash_check
+    already_trashed? ? 'trashed' : ftype_without_trash_check
+  end
+  alias_method_chain :ftype, :trash_check
+
+  def already_trashed?
+    descendant_of? Pathname "#{ENV['HOME']}/.Trash"
+  end
+
   def exist_with_symlink_read?
     if symlink?
       readlink.exist_without_symlink_read? ||
@@ -47,6 +56,16 @@ class Pathname
     end
   end
   alias_method_chain :writable?, :follow_symlink
+
+  def ftype_with_cache
+    cache(:ftype)[@path] ||= ftype_without_cache
+  end
+  alias_method_chain :ftype, :cache
+
+  def already_trashed_with_cache?
+    cache(:already_trashed?)[@path] ||= already_trashed_without_cache?
+  end
+  alias_method_chain :already_trashed?, :cache
 
   def exist_with_cache?
     cache(:exist?)[@path] ||= exist_without_cache?
