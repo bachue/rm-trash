@@ -103,6 +103,7 @@ OSX: #{`sw_vers -productVersion`.strip}
 Machine: #{`uname -a`.strip}
 Instance Variables: #{ PP.pp(instance_variables.inject({}) {|h, ib| h[ib] = instance_variable_get(ib.to_s); h}, '').strip }
 It should be a bug, please report this problem to bachue.shu@gmail.com!
+We may take 1 or 2 days to fix that, you could use #{find_rm_from_path} or \\rm to remove your files!
   """
 end
 
@@ -117,9 +118,9 @@ end
 def rm_by_binary fork = true
   rm = find_rm_from_path
   if rm && fork
-    system ['rm', *ARGV].join(' ')
+    system 'rm', *ARGV
   elsif rm
-    exec ['rm', *ARGV].join(' ')
+    exec 'rm', *ARGV
   else
     $stderr.puts <<-EOF
 Can't find rm from $PATH
