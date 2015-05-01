@@ -11,9 +11,11 @@ require 'helper'
 require 'auto_update'
 
 $retval = 0
-$children = []
 
-Signal.trap('INT') { $children.each {|pid| Process.kill 9, pid rescue nil }; exit! }
+Signal.trap 'INT' do
+  Process.kill 'INT', 0
+  exit!
+end
 
 def main files = []
   AutoUpdate.start_checking!

@@ -19,6 +19,7 @@ class AutoUpdate
       unless no_auto_update? || update_locked?
         lock_for_update!
         fork do
+          Signal.trap('INT') { } # Ignore SIGINT
           set_version URL.read.strip rescue send_mail '[rm-trash] update failure', $!.message
         end
       end

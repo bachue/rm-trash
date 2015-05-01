@@ -22,11 +22,15 @@ def rm_all! files
   tasks = processes.times.map {|i| files[partition*i...partition*(i+1)] }
 
   mytask = tasks.pop
-  $children = tasks.map { |task| fork { rm_all task } }
+  tasks.map do |task|
+    fork do
+      Signal.trap('INT') { exit! } # Kill itself once receives SIGINT
+      rm_all task
+    end
+  end
   rm_all mytask # do this task by itself
 
   Process.waitall
-  $children.clear
 end
 
 def run_apple_script script
