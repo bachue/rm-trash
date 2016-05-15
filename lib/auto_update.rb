@@ -13,7 +13,7 @@ class AutoUpdate
     UPDATE_LOCK_PATH = (VERSION_INFO_PATH + '/update.lock').freeze
     VERSION_FILE_PATH = (VERSION_INFO_PATH + '/version').freeze
     PROMPTED_FILE_PATH = (VERSION_INFO_PATH + '/prompted').freeze
-    URL = URI('https://gitcafe.com/bachue/rm-trash/raw/master/version').freeze
+    URL = URI('https://raw.githubusercontent.com/bachue/rm-trash/master/version').freeze
 
     def start_checking!
       unless no_auto_update? || update_locked?
@@ -31,7 +31,7 @@ class AutoUpdate
           prompted!
           STDERR.puts 'There is a new version of rm-trash available. Some bug fixes included.'.bold.green
           STDERR.puts 'We recommand you to pull updates from '.bold.green <<
-                      'https://gitcafe.com/bachue/rm-trash'.bold.underline <<
+                      'https://github.com/bachue/rm-trash'.bold.underline <<
                       ' and install.'.bold.green
         end
       end

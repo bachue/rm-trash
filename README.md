@@ -58,7 +58,7 @@ Usage: rm [options] file...
 2. 如果之前用户使用Git下载源代码来安装本工具的话，则请执行`git pull origin master`命令即可自动更新源代码。
 
 ## Contributing
-* Fork it from `git@gitcafe.com:bachue/rm-trash.git`
+* Fork it from `git@github.com:bachue/rm-trash.git`
 * Create your feature branch (`git checkout -b my-new-feature`)
 * Commit your changes (`git commit -am 'Add some feature'`)
 * Push to the branch (`git push origin my-new-feature`)
